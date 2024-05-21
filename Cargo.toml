@@ -1,0 +1,37 @@
+[package]
+name = "casper-shorts"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+odra = { path = "../odra3/odra", features = [], default-features = false }
+odra-modules = { path = "../odra3/modules", features = [], default-features = false }
+
+[dev-dependencies]
+odra-test = { path = "../odra3/odra-test", features = [], default-features = false }
+cucumber = { version = "0.19.1", features = ["libtest"] }
+futures = "0.3"
+
+[build-dependencies]
+odra-build = { path = "../odra3/odra-build", features = [], default-features = false }
+
+[[bin]]
+name = "casper_shorts_build_contract"
+path = "bin/build_contract.rs"
+test = false
+
+[[bin]]
+name = "casper_shorts_build_schema"
+path = "bin/build_schema.rs"
+test = false
+
+[profile.release]
+codegen-units = 1
+lto = true
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[[test]]
+name = "test_casper_shorts"
+harness = false
