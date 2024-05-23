@@ -1,5 +1,6 @@
 use odra::{
-    casper_types::U256, module::Module, prelude::*, Address, ContractRef, SubModule, UnwrapOrRevert, Var
+    casper_types::U256, module::Module, prelude::*, Address, ContractRef, SubModule,
+    UnwrapOrRevert, Var,
 };
 use odra_modules::{access::Ownable, cep18_token::Cep18ContractRef};
 
@@ -37,20 +38,20 @@ impl Market {
         self.admin.init();
     }
 
-    pub fn deposit_long(&mut self, amount: U256, price_data: Option<PriceData>) {
-        self.deposit_unchecked(Side::Long, amount, price_data);
+    pub fn deposit_long(&mut self, amount: U256) {
+        self.deposit_unchecked(Side::Long, amount);
     }
 
-    pub fn deposit_short(&mut self, amount: U256, price_data: Option<PriceData>) {
-        self.deposit_unchecked(Side::Short, amount, price_data);
+    pub fn deposit_short(&mut self, amount: U256) {
+        self.deposit_unchecked(Side::Short, amount);
     }
 
-    pub fn withdraw_long(&mut self, amount: U256, price_data: Option<PriceData>) {
-        self.withdrawal_unchecked(Side::Long, amount, price_data);
+    pub fn withdraw_long(&mut self, amount: U256) {
+        self.withdrawal_unchecked(Side::Long, amount);
     }
 
-    pub fn withdraw_short(&mut self, amount: U256, price_data: Option<PriceData>) {
-        self.withdrawal_unchecked(Side::Short, amount, price_data);
+    pub fn withdraw_short(&mut self, amount: U256) {
+        self.withdrawal_unchecked(Side::Short, amount);
     }
 
     pub fn set_price(&mut self, price_data: PriceData) {
@@ -93,16 +94,13 @@ impl Market {
         self.state.set(state);
     }
 
-    fn deposit_unchecked(&mut self, side: Side, amount: U256, price_data: Option<PriceData>) {
+    fn deposit_unchecked(&mut self, side: Side, amount: U256) {
         self.collect_deposit(&amount);
         let (amount, fee) = split_fee(amount);
         self.collect_fee(&fee);
 
         let mut state = self.get_state();
 
-        if let Some(price_data) = price_data {
-            state.on_price_change(price_data.price);
-        }
         let new_tokens = state.on_deposit(side, amount);
         match side {
             Side::Long => self.long_token().mint(&self.env().caller(), &new_tokens),
@@ -112,11 +110,8 @@ impl Market {
         self.set_state(state);
     }
 
-    pub fn withdrawal_unchecked(&mut self, side: Side, amount: U256, price_data: Option<PriceData>) {
+    pub fn withdrawal_unchecked(&mut self, side: Side, amount: U256) {
         let mut state = self.get_state();
-        if let Some(price_data) = price_data {
-            state.on_price_change(price_data.price);
-        }
         let withdraw_amount = state.on_withdraw(side, amount);
 
         let (withdraw_amount, fee) = split_fee(withdraw_amount);

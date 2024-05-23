@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "casper-shorts-charts",
-    "casper-shorts-client",
+    # "casper-shorts-charts",
+        # "casper-shorts-client",
     "casper-shorts-contracts",
 ]
 resolver = "2"

@@ -19,8 +19,7 @@ enum Commands {
     UpdatePrice {
         #[arg(short, long)]
         dry_run: bool,
-    }, 
-
+    },
     // /// Sets up a slashing voter
     // SetupSlashingVoter,
     // /// Prints addresses of all contracts

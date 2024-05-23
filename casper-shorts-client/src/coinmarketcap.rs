@@ -21,7 +21,9 @@ pub fn get_cspr_price() -> Result<f64, Error> {
         .send()?;
 
     let info: Value = response.json()?;
-    let price = info["data"]["5899"]["quote"]["USD"]["price"].as_f64().unwrap();
+    let price = info["data"]["5899"]["quote"]["USD"]["price"]
+        .as_f64()
+        .unwrap();
 
     Ok(price)
 }

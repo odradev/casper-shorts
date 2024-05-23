@@ -50,14 +50,14 @@ fn to_usd(value: U256) -> f64 {
     value.as_u64() as f64 / ONE_DOLLAR as f64
 }
 
-fn percent_diff(data: &[f64]) -> Vec<f64> {
-    let mut result = vec![];
-    for i in 1..data.len() {
-        let diff = (data[i] - data[i - 1]) / data[i - 1];
-        result.push(diff * 100.0);
-    }
-    result
-}
+// fn percent_diff(data: &[f64]) -> Vec<f64> {
+//     let mut result = vec![];
+//     for i in 1..data.len() {
+//         let diff = (data[i] - data[i - 1]) / data[i - 1];
+//         result.push(diff * 100.0);
+//     }
+//     result
+// }
 
 fn symulate(incremental_mode: bool) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
     let mut state = MarketState {

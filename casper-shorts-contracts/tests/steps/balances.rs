@@ -27,4 +27,3 @@ fn balance_check(
 
     assert!(diff < U256::from(10_000_000), "{}", error_msg);
 }
-

@@ -2,7 +2,7 @@
 #[allow(unused_imports)]
 use casper_shorts_contracts;
 
-fn main(){}
+fn main() {}
 
 // TODO: Fix this
 // #[cfg(not(target_arch = "wasm32"))]

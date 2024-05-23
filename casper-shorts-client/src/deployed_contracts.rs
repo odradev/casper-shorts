@@ -2,7 +2,10 @@ use std::{fs::File, io::Write, str::FromStr};
 
 use casper_shorts_contracts::{cep18::Cep18HostRef, market::MarketHostRef};
 use chrono::{DateTime, SecondsFormat, Utc};
-use odra::{host::{HostEnv, HostRefLoader}, Address};
+use odra::{
+    host::{HostEnv, HostRefLoader},
+    Address,
+};
 use serde_derive::{Deserialize, Serialize};
 
 const DEPLOYED_CONTRACTS_FILE: &str = "casper-shorts-client/resources/deployed_contracts.toml";
@@ -102,7 +105,7 @@ impl DeployedContracts {
             wcspr_token: Cep18HostRef::load(&env, contracts.address("WCSPR").unwrap()),
             short_token: Cep18HostRef::load(&env, contracts.address("SHORT").unwrap()),
             long_token: Cep18HostRef::load(&env, contracts.address("LONG").unwrap()),
-            market: MarketHostRef::load(&env,contracts.address("Market").unwrap()),
+            market: MarketHostRef::load(&env, contracts.address("Market").unwrap()),
         }
     }
 }

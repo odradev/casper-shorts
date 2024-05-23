@@ -6,8 +6,8 @@ use odra::casper_types::U256;
 use odra::host::Deployer;
 use odra::host::HostRef;
 
-use crate::{coinmarketcap, log};
 use crate::deployed_contracts::{DeployedContracts, DeployedContractsToml};
+use crate::{coinmarketcap, log};
 
 pub fn deploy_all() {
     DeployedContractsToml::handle_previous_version();
@@ -74,7 +74,6 @@ pub fn deploy_all() {
         },
     );
     contracts.add_contract("Market", market.address());
-   
 }
 
 pub fn set_security() {
@@ -83,10 +82,14 @@ pub fn set_security() {
 
     // Make market minter of LONG and SHORT tokens.
     env.set_gas(10_000_000_000);
-    contracts.short_token.change_security(vec![], vec![contracts.market.address().clone()], vec![]);
+    contracts
+        .short_token
+        .change_security(vec![], vec![contracts.market.address().clone()], vec![]);
 
     env.set_gas(10_000_000_000);
-    contracts.long_token.change_security(vec![], vec![contracts.market.address().clone()], vec![]);    
+    contracts
+        .long_token
+        .change_security(vec![], vec![contracts.market.address().clone()], vec![]);
 }
 
 pub fn update_price(dry_run: bool) {
@@ -106,7 +109,7 @@ pub fn update_price(dry_run: bool) {
     let new_price = new_price * ONE_DOLLAR as f64;
     let new_price = new_price.round() as u64;
     let new_price = U256::from(new_price);
-    
+
     if new_price == current_price {
         log::info("Price is the same, no need to update.");
         return;
@@ -120,5 +123,4 @@ pub fn update_price(dry_run: bool) {
 
     let current_price = contracts.market.get_market_state().price;
     log::info(format!("New contract price: 0.0{} CSPR/USD", current_price));
-
 }

@@ -2,7 +2,8 @@ use std::fmt::{Debug, Formatter};
 
 use casper_shorts_contracts::{
     market::{MarketHostRef, MarketInitArgs},
-    price_data::PriceData, system::{MarketState, ONE_CENT},
+    price_data::PriceData,
+    system::{MarketState, ONE_CENT},
 };
 use odra::{
     casper_types::U256,
@@ -155,46 +156,34 @@ impl CasperShortsWorld {
         let address = self.address(account);
         self.odra_env.set_caller(address);
         self.wcspr_token.approve(self.market.address(), &amount);
-        self.market.deposit_long(
-            amount,
-            None
-        );
+        self.market.deposit_long(amount);
     }
 
     pub fn go_short(&mut self, account: Account, amount: U256) {
         let address = self.address(account);
         self.odra_env.set_caller(address);
         self.wcspr_token.approve(self.market.address(), &amount);
-        self.market.deposit_short(
-            amount,
-            None
-        );
+        self.market.deposit_short(amount);
     }
 
     pub fn withdraw_long(&mut self, account: Account, amount: U256) {
         let address = self.address(account);
         self.odra_env.set_caller(address);
         self.long_token.approve(self.market.address(), &amount);
-        self.market.withdraw_long(
-            amount,
-            None
-        );
+        self.market.withdraw_long(amount);
     }
 
     pub fn withdraw_short(&mut self, account: Account, amount: U256) {
         let address = self.address(account);
         self.odra_env.set_caller(address);
         self.short_token.approve(self.market.address(), &amount);
-        self.market.withdraw_short(
-            amount,
-            None
-        );
+        self.market.withdraw_short(amount);
     }
 
     pub fn set_price(&mut self, price: U256) {
         self.market.set_price(PriceData {
             price,
-            timestamp: 0
+            timestamp: 0,
         });
     }
 

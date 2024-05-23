@@ -1,8 +1,8 @@
 #[allow(unused_imports)]
 use odra_modules;
 
-pub use odra_modules::cep18_token::*;
 pub use odra_modules::cep18::utils::Cep18Modality;
+pub use odra_modules::cep18_token::*;
 
 #[cfg(test)]
 mod tests {

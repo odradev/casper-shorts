@@ -25,12 +25,6 @@ name = "casper_shorts_contracts_build_schema"
 path = "bin/build_schema.rs"
 test = false
 
-[[bin]]
-name = "plots"
-path = "bin/plots.rs"
-test = false
-required-features = ["plots"]
-
 [[test]]
 name = "test_casper_shorts"
 harness = false
