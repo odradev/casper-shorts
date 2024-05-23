@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 use cucumber::Parameter;
 use odra::casper_types::U256;
@@ -8,6 +8,9 @@ use odra::casper_types::U256;
 pub enum Account {
     Alice = 1,
     Bob = 2,
+    Charlie = 3,
+    FeeCollector = 4,
+    Market = 100,
 }
 
 impl FromStr for Account {
@@ -17,6 +20,9 @@ impl FromStr for Account {
         match s {
             "Alice" => Ok(Account::Alice),
             "Bob" => Ok(Account::Bob),
+            "Charlie" => Ok(Account::Charlie),
+            "FeeCollector" => Ok(Account::FeeCollector),
+            "Market" => Ok(Account::Market),
             _ => Err(format!("Invalid account: {}", s)),
         }
     }
@@ -31,8 +37,8 @@ impl Account {
 #[derive(Debug, Parameter, Clone, Copy)]
 #[param(name = "token_kind", regex = ".+")]
 pub enum TokenKind {
-    ShortToken,
-    LongToken,
+    SHORT,
+    LONG,
     WCSPR,
 }
 
@@ -41,8 +47,8 @@ impl FromStr for TokenKind {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "ShortToken" => Ok(TokenKind::ShortToken),
-            "LongToken" => Ok(TokenKind::LongToken),
+            "SHORT" => Ok(TokenKind::SHORT),
+            "LONG" => Ok(TokenKind::LONG),
             "WCSPR" => Ok(TokenKind::WCSPR),
             _ => Err(format!("Invalid token kind: {}", s)),
         }
@@ -50,8 +56,8 @@ impl FromStr for TokenKind {
 }
 
 #[derive(Debug, Parameter, Clone, Copy)]
-#[param(name = "amount", regex = r"\d+")]
-pub struct Amount(U256);
+#[param(name = "amount", regex = ".+")]
+pub struct Amount(pub U256);
 
 impl FromStr for Amount {
     type Err = String;
@@ -66,5 +72,16 @@ impl FromStr for Amount {
 impl Amount {
     pub fn value(&self) -> U256 {
         self.0
+    }
+
+    pub fn as_f64(&self) -> f64 {
+        let num = self.0.as_u64();
+        num as f64 / 1_000_000_000f64
+    }
+}
+
+impl Display for Amount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_f64())
     }
 }

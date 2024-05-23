@@ -1,5 +1,11 @@
-Feature: Casper Shorts Setup
+Feature: Casper Shorts Test Setup
 
-    Scenario: Initial balances matches.
-        Then Alice has 1000 WCSPR
-        Then Bob has 1000 WCSPR
+    Scenario Outline: Initial of <account> balances matches.
+        Then <account> has 1000 WCSPR
+        Then <account> has 0 LONG
+        Then <account> has 0 SHORT
+
+    Examples:
+        | account |
+        | Alice   |
+        | Bob     |

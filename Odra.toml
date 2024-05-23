@@ -1,2 +1,5 @@
 [[contracts]]
 fqn = "Cep18"
+
+[[contracts]]
+fqn = "Market"

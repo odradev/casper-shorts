@@ -6,10 +6,11 @@ edition = "2021"
 [dependencies]
 odra = { path = "../odra3/odra", features = [], default-features = false }
 odra-modules = { path = "../odra3/modules", features = [], default-features = false }
+plotly = { version = "0.8.4", features = ["kaleido"], optional = true }
 
 [dev-dependencies]
 odra-test = { path = "../odra3/odra-test", features = [], default-features = false }
-cucumber = { version = "0.19.1", features = ["libtest"] }
+cucumber = "0.19.1"
 futures = "0.3"
 
 [build-dependencies]
@@ -25,6 +26,12 @@ name = "casper_shorts_build_schema"
 path = "bin/build_schema.rs"
 test = false
 
+[[bin]]
+name = "plots"
+path = "bin/plots.rs"
+test = false
+required-features = ["plots"]
+
 [profile.release]
 codegen-units = 1
 lto = true
@@ -35,3 +42,7 @@ opt-level = 3
 [[test]]
 name = "test_casper_shorts"
 harness = false
+
+[features]
+default = []
+plots = ["plotly"]
