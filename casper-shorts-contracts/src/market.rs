@@ -5,6 +5,7 @@ use odra::{
 use odra_modules::{access::Ownable, cep18_token::Cep18ContractRef};
 
 use crate::{
+    address_pack::{AddressPack, AddressPackModule},
     price_data::PriceData,
     system::{MarketState, Side},
 };
@@ -12,28 +13,13 @@ use crate::{
 #[odra::module]
 pub struct Market {
     admin: SubModule<Ownable>,
-    long_token: Var<Address>,
-    short_token: Var<Address>,
-    wcspr_token: Var<Address>,
-    fee_collector: Var<Address>,
+    address_pack: SubModule<AddressPackModule>,
     state: Var<MarketState>,
 }
 
 #[odra::module]
 impl Market {
-    pub fn init(
-        &mut self,
-        long_token: Address,
-        short_token: Address,
-        wcspr_token: Address,
-        fee_collector: Address,
-        last_price: PriceData,
-    ) {
-        // TODO: Long and Short tokens should have total supply of 0.
-        self.long_token.set(long_token);
-        self.short_token.set(short_token);
-        self.wcspr_token.set(wcspr_token);
-        self.fee_collector.set(fee_collector);
+    pub fn init(&mut self, last_price: PriceData) {
         self.state.set(MarketState::new(last_price.price));
         self.admin.init();
     }
@@ -64,28 +50,14 @@ impl Market {
     pub fn get_market_state(&self) -> MarketState {
         self.get_state()
     }
+
+    pub fn set_addres_pack(&mut self, address_pack: AddressPack) {
+        self.admin.assert_owner(&self.env().caller());
+        self.address_pack.set(address_pack);
+    }
 }
 
 impl Market {
-    fn wcspr_token(&self) -> Cep18ContractRef {
-        let addr = self.wcspr_token.get().unwrap_or_revert(&self.env());
-        Cep18ContractRef::new(self.env(), addr)
-    }
-
-    fn long_token(&self) -> Cep18ContractRef {
-        let addr = self.long_token.get().unwrap_or_revert(&self.env());
-        Cep18ContractRef::new(self.env(), addr)
-    }
-
-    fn short_token(&self) -> Cep18ContractRef {
-        let addr = self.short_token.get().unwrap_or_revert(&self.env());
-        Cep18ContractRef::new(self.env(), addr)
-    }
-
-    fn fee_collector(&self) -> Address {
-        self.fee_collector.get().unwrap_or_revert(&self.env())
-    }
-
     fn get_state(&self) -> MarketState {
         self.state.get().unwrap_or_revert(&self.env())
     }
@@ -100,14 +72,15 @@ impl Market {
         self.collect_fee(&fee);
 
         let mut state = self.get_state();
-
         let new_tokens = state.on_deposit(side, amount);
-        match side {
-            Side::Long => self.long_token().mint(&self.env().caller(), &new_tokens),
-            Side::Short => self.short_token().mint(&self.env().caller(), &new_tokens),
-        }
-
         self.set_state(state);
+
+        // Mint new tokens to the caller.
+        let mut token = match side {
+            Side::Long => self.address_pack.long_token_cep18(),
+            Side::Short => self.address_pack.short_token_cep18(),
+        };
+        token.mint(&self.env().caller(), &new_tokens);
     }
 
     pub fn withdrawal_unchecked(&mut self, side: Side, amount: U256) {
@@ -121,8 +94,8 @@ impl Market {
         let self_address = self.env().self_address();
         let caller = self.env().caller();
         let mut token = match side {
-            Side::Long => self.long_token(),
-            Side::Short => self.short_token(),
+            Side::Long => self.address_pack.long_token_cep18(),
+            Side::Short => self.address_pack.short_token_cep18(),
         };
         token.transfer_from(&caller, &self_address, &amount);
         token.burn(&self_address, &amount);
@@ -143,16 +116,24 @@ impl Market {
     // }
 
     fn collect_fee(&mut self, amount: &U256) {
-        self.wcspr_token().transfer(&self.fee_collector(), amount);
+        let fee_collector = self.address_pack.fee_collector();
+        self.address_pack
+            .wcspr_token()
+            .transfer(&fee_collector, amount);
     }
 
     fn collect_deposit(&mut self, amount: &U256) {
-        self.wcspr_token()
-            .transfer_from(&self.env().caller(), &self.env().self_address(), amount);
+        self.address_pack.wcspr_token().transfer_from(
+            &self.env().caller(),
+            &self.env().self_address(),
+            amount,
+        );
     }
 
     fn withdraw_deposit(&mut self, amount: &U256) {
-        self.wcspr_token().transfer(&self.env().caller(), amount);
+        self.address_pack
+            .wcspr_token()
+            .transfer(&self.env().caller(), amount);
     }
 }
 

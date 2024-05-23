@@ -3,3 +3,12 @@ fqn = "casper_shorts_contracts::Cep18"
 
 [[contracts]]
 fqn = "casper_shorts_contracts::market::Market"
+
+[[contracts]]
+fqn = "casper_shorts_contracts::token_wcspr::TokenWCSPR"
+
+[[contracts]]
+fqn = "casper_shorts_contracts::token_long::TokenLong"
+
+[[contracts]]
+fqn = "casper_shorts_contracts::token_short::TokenShort"

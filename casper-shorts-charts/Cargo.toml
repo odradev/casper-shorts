@@ -11,3 +11,5 @@ odra = { version = "1.0.0", features = [], default-features = false }
 [[bin]]
 name = "casper-shorts-charts"
 path = "src/main.rs"
+test = false
+bench = false
