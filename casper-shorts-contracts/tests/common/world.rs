@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter};
 
-use casper_shorts::{
+use casper_shorts_contracts::{
     market::{MarketHostRef, MarketInitArgs},
     price_data::PriceData, system::{MarketState, ONE_CENT},
 };

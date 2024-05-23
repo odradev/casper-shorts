@@ -17,4 +17,4 @@ check-lint: clippy
     cargo fmt -- --check
 
 plots:
-    cargo run --bin plots -F plots
+    cargo run -p casper-shorts-charts

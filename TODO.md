@@ -3,3 +3,5 @@ Market:
   contract. Or method to sync the balance of the contract with the balance of
   the contract's account.
 
+WCSPR:
+- Add `faucet()` to WCSPR contract, and turn off transfers.

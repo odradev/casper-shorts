@@ -1,6 +1,9 @@
 #[allow(unused_imports)]
 use odra_modules;
 
+pub use odra_modules::cep18_token::*;
+pub use odra_modules::cep18::utils::Cep18Modality;
+
 #[cfg(test)]
 mod tests {
     use odra::{casper_types::U256, host::Deployer};

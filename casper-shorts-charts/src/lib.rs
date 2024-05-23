@@ -1,14 +1,10 @@
-use casper_shorts::system::{MarketState, ONE_CENT, ONE_DOLLAR, ONE_TENTH_CENT};
+use casper_shorts_contracts::system::{MarketState, ONE_CENT, ONE_DOLLAR, ONE_TENTH_CENT};
 use odra::casper_types::U256;
 use plotly::{self, common::Mode, Plot, Scatter};
 
-pub fn main() {
-    draw_plot_1_price_goes_up();
-}
-
 // Draw short and long liquidity over time when price changes.
 pub fn draw_plot_1_price_goes_up() {
-    let (prices, long_liquidity_inc, short_liquidity_inc) = symulate(true);
+    let (_rices, long_liquidity_inc, short_liquidity_inc) = symulate(true);
     let (prices, long_liquidity, short_liquidity) = symulate(false);
 
     // Create a new plot
@@ -68,11 +64,11 @@ fn symulate(incremental_mode: bool) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
         long_total_supply: U256::zero(),
         short_total_supply: U256::zero(),
         long_liquidity: U256::from(20_000),
-        short_liquidity: U256::from(10_000),
+        short_liquidity: U256::from(5_000),
         price: U256::from(ONE_CENT),
     };
 
-    let price_list_steps = 60;
+    let price_list_steps = 100;
     let mut prices = vec![to_usd(state.price)];
     let mut long_liquidity = vec![state.long_liquidity.as_u64() as f64];
     let mut short_liquidity = vec![state.short_liquidity.as_u64() as f64];

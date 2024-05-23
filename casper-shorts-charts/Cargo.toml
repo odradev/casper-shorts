@@ -1,0 +1,13 @@
+[package]
+name = "casper-shorts-charts"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+plotly = { version = "0.8.4", features = ["kaleido"] }
+casper-shorts-contracts = { path = "../casper-shorts-contracts" }
+odra = { version = "1.0.0", features = [], default-features = false }
+
+[[bin]]
+name = "casper-shorts-charts"
+path = "src/main.rs"

@@ -1,6 +1,6 @@
 use std::{fmt::Display, str::FromStr};
 
-use casper_shorts::system::ONE_DOLLAR;
+use casper_shorts_contracts::system::ONE_DOLLAR;
 use cucumber::Parameter;
 use odra::casper_types::U256;
 
