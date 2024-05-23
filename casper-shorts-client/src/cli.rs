@@ -20,6 +20,10 @@ enum Commands {
         #[arg(short, long)]
         dry_run: bool,
     },
+    UpdatePriceDeamon {
+        interval_mintues: u64,
+    }
+
     // /// Sets up a slashing voter
     // SetupSlashingVoter,
     // /// Prints addresses of all contracts
@@ -71,6 +75,7 @@ pub fn parse() {
         DeployAll => actions::deploy_all(),
         SetSecurity => actions::set_security(),
         UpdatePrice { dry_run } => actions::update_price(dry_run),
+        UpdatePriceDeamon { interval_mintues } => actions::update_price_deamon(interval_mintues),
         // Whitelist => actions::whitelist(),
         // SetupSlashingVoter => actions::setup_slashing_voter(),
         // PrintAddresses => actions::print_addresses(),

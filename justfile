@@ -25,3 +25,6 @@ deploy-contracts:
 
 update-price:
     cargo run -p casper-shorts-client update-price
+
+update-price-deamon:
+    cargo run -p casper-shorts-client update-price-deamon 1

@@ -95,6 +95,9 @@ pub fn set_security() {
 pub fn update_price(dry_run: bool) {
     let env = odra_casper_livenet_env::env();
     let mut contracts = DeployedContracts::load(env.clone());
+    
+    // Print time.
+    log::info(format!("Time: {}", chrono::Utc::now()));
 
     let new_price = coinmarketcap::get_cspr_price().unwrap();
     log::info(format!("CMC price: {} CSPR/USD", new_price));
@@ -123,4 +126,11 @@ pub fn update_price(dry_run: bool) {
 
     let current_price = contracts.market.get_market_state().price;
     log::info(format!("New contract price: 0.0{} CSPR/USD", current_price));
+}
+
+pub fn update_price_deamon(interval_minutes: u64) {
+    loop {
+        update_price(false);
+        std::thread::sleep(std::time::Duration::from_secs(interval_minutes * 60));
+    }
 }
