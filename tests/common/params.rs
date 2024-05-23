@@ -1,5 +1,6 @@
 use std::{fmt::Display, str::FromStr};
 
+use casper_shorts::system::ONE_DOLLAR;
 use cucumber::Parameter;
 use odra::casper_types::U256;
 
@@ -83,5 +84,36 @@ impl Amount {
 impl Display for Amount {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_f64())
+    }
+}
+
+#[derive(Debug, Parameter, Clone, Copy)]
+#[param(name = "price", regex = ".+")]
+pub struct Price(pub U256);
+
+impl FromStr for Price {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let num = (s.parse::<f64>().unwrap() * ONE_DOLLAR as f64) as u64;
+        let num = U256::from(num);
+        Ok(Self(num))
+    }
+}
+
+impl Display for Price {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_f64())
+    }
+}
+
+impl Price {
+    pub fn value(&self) -> U256 {
+        self.0
+    }
+
+    pub fn as_f64(&self) -> f64 {
+        let num = self.0.as_u64();
+        num as f64 / ONE_DOLLAR as f64
     }
 }

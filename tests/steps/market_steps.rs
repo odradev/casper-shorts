@@ -1,7 +1,7 @@
-use cucumber::when;
+use cucumber::{then, when};
 
 use crate::common::{
-    params::{Account, Amount, TokenKind},
+    params::{Account, Amount, Price, TokenKind},
     world::CasperShortsWorld,
 };
 
@@ -28,4 +28,15 @@ fn withdraw_long(
         TokenKind::SHORT => world.withdraw_short(account, amount.value()),
         TokenKind::WCSPR => panic!("Cannot withdraw using WCSPR"),
     }
+}
+
+#[when(expr = "price changes to {price} USD")]
+fn set_price(world: &mut CasperShortsWorld, price: Price) {
+    world.set_price(price.value());
+}
+
+#[then(expr = "price is {price} USD")]
+fn check_price(world: &mut CasperShortsWorld, price: Price) {
+    let market_state = world.get_market_state();
+    assert_eq!(market_state.price, price.value());
 }

@@ -2,8 +2,7 @@ use std::fmt::{Debug, Formatter};
 
 use casper_shorts::{
     market::{MarketHostRef, MarketInitArgs},
-    price_data::PriceData,
-    system::ONE_CENT,
+    price_data::PriceData, system::{MarketState, ONE_CENT},
 };
 use odra::{
     casper_types::U256,
@@ -80,7 +79,7 @@ impl Default for CasperShortsWorld {
                 wcspr_token: wcspr_token.address().clone(),
                 fee_collector: odra_env.get_account(Account::FeeCollector.index()),
                 last_price: PriceData {
-                    price: 100_000_000_000u64.into(),
+                    price: ONE_CENT.into(),
                     timestamp: 0u64.into(),
                 },
             },
@@ -158,10 +157,7 @@ impl CasperShortsWorld {
         self.wcspr_token.approve(self.market.address(), &amount);
         self.market.deposit_long(
             amount,
-            PriceData {
-                price: U256::from(ONE_CENT),
-                timestamp: 9u64.into(),
-            },
+            None
         );
     }
 
@@ -171,10 +167,7 @@ impl CasperShortsWorld {
         self.wcspr_token.approve(self.market.address(), &amount);
         self.market.deposit_short(
             amount,
-            PriceData {
-                price: U256::from(ONE_CENT),
-                timestamp: 9u64.into(),
-            },
+            None
         );
     }
 
@@ -184,10 +177,7 @@ impl CasperShortsWorld {
         self.long_token.approve(self.market.address(), &amount);
         self.market.withdraw_long(
             amount,
-            PriceData {
-                price: U256::from(ONE_CENT),
-                timestamp: 9u64.into(),
-            },
+            None
         );
     }
 
@@ -197,10 +187,18 @@ impl CasperShortsWorld {
         self.short_token.approve(self.market.address(), &amount);
         self.market.withdraw_short(
             amount,
-            PriceData {
-                price: U256::from(ONE_CENT),
-                timestamp: 9u64.into(),
-            },
+            None
         );
+    }
+
+    pub fn set_price(&mut self, price: U256) {
+        self.market.set_price(PriceData {
+            price,
+            timestamp: 0
+        });
+    }
+
+    pub fn get_market_state(&self) -> MarketState {
+        self.market.get_market_state()
     }
 }

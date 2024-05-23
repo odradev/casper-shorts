@@ -9,3 +9,6 @@ Feature: Casper Shorts Test Setup
         | account |
         | Alice   |
         | Bob     |
+
+    Scenario: Initial price
+        Then price is 0.01 USD

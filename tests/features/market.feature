@@ -41,3 +41,8 @@ Feature: Casper Shorts Market tests
         Then FeeCollector has 0.75 WCSPR
         Then Alice has 949.75 WCSPR
         Then Market has 49.5 WCSPR
+
+    Scenario: Price update on empty pool
+        When price changes to 0.03 USD
+        Then price is 0.03 USD
+    
