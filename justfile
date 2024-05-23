@@ -20,8 +20,8 @@ plots:
     cargo run -p casper-shorts-charts
 
 deploy-contracts:
-    cargo run --bin casper-shorts-client deploy-contracts
-    cargo run --bin casper-shorts-client set-security
+    cargo run -p casper-shorts-client deploy-contracts
+    cargo run -p casper-shorts-client set-security
 
 update-price:
-    cargo run --bin casper-shorts-client update-price
+    cargo run -p casper-shorts-client update-price
