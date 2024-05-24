@@ -1,7 +1,9 @@
 pub mod actions;
+pub mod bots;
 pub mod cli;
 pub mod coinmarketcap;
 pub mod deployed_contracts;
+pub mod models;
 
 mod log {
     /// Info message.

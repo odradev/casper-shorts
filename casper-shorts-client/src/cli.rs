@@ -1,4 +1,4 @@
-use crate::actions;
+use crate::{actions, models::BotMode};
 use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -21,10 +21,31 @@ enum Commands {
         dry_run: bool,
     },
     UpdatePriceDeamon {
-        interval_mintues: u64,
+        interval_seconds: Option<u64>,
     },
     PrintBalances,
     GoLong,
+    PrintStats,
+    TransferWCSPR {
+        amount: f64,
+        recipient: String,
+    },
+    #[clap(name = "run-bot", about = "Run bot in a specific mode")]
+    RunBot(RunBot),
+}
+
+#[derive(Debug, Parser)]
+pub struct RunBot {
+    #[structopt(subcommand)]
+    pub run_bots_commands: RunBotCommands,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum RunBotCommands {
+    Random {
+        #[arg(short, long)]
+        interval_seconds: Option<u64>,
+    },
 }
 
 pub fn parse() {
@@ -32,10 +53,23 @@ pub fn parse() {
         Commands::DeployContracts => actions::deploy_all(),
         Commands::SetConfig => actions::set_config(),
         Commands::UpdatePrice { dry_run } => actions::update_price(dry_run),
-        Commands::UpdatePriceDeamon { interval_mintues } => {
-            actions::update_price_deamon(interval_mintues)
+        Commands::UpdatePriceDeamon { interval_seconds } => {
+            actions::update_price_deamon(duration(interval_seconds))
         }
         Commands::PrintBalances => actions::print_balances(),
         Commands::GoLong => actions::go_long(1_000_000_000.into()),
+        Commands::TransferWCSPR { .. } => {
+            panic!("Not implemented")
+        }
+        Commands::RunBot(run_bot) => match run_bot.run_bots_commands {
+            RunBotCommands::Random { interval_seconds } => {
+                actions::run_bot(BotMode::Random, duration(interval_seconds))
+            }
+        },
+        Commands::PrintStats => actions::print_stats(),
     }
+}
+
+fn duration(seconds: Option<u64>) -> Option<std::time::Duration> {
+    seconds.map(|s| std::time::Duration::from_secs(s))
 }

@@ -28,11 +28,14 @@ set-config:
 update-price:
     cargo run -p casper-shorts-client update-price
 
-update-price-deamon:
-    cargo run -p casper-shorts-client update-price-deamon 1
+update-price-deamon SEC:
+    cargo run -p casper-shorts-client update-price-deamon {{SEC}} 
 
 print-balances:
     cargo run -p casper-shorts-client print-balances
 
 go-long:
     cargo run -p casper-shorts-client go-long
+
+random-bot SEC:
+    cargo run -p casper-shorts-client run-bot random -i {{SEC}}

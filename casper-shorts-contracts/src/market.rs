@@ -127,7 +127,10 @@ impl Market {
             Side::Long => self.address_pack.long_token_cep18(),
             Side::Short => self.address_pack.short_token_cep18(),
         };
+
         token.transfer_from(&reciever, &self_address, &amount);
+
+        // TODO: Override burn to make it possible without above transfer.
         token.burn(&self_address, &amount);
 
         self.set_state(state);

@@ -15,6 +15,7 @@ reqwest = { version = "0.11", features = ["blocking", "json"] }
 toml = "0.8.13"
 clap = { version = "4.5.4", features = ["derive"] }
 prettycli = "0.1.1"
+rand = "0.8.4"
 
 [[bin]]
 name = "casper-shorts-client"
