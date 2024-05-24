@@ -1,6 +1,9 @@
 use std::{fs::File, io::Write, str::FromStr};
 
-use casper_shorts_contracts::{cep18::Cep18HostRef, market::MarketHostRef};
+use casper_shorts_contracts::{
+    market::MarketHostRef, token_long::TokenLongHostRef, token_short::TokenShortHostRef,
+    token_wcspr::TokenWCSPRHostRef,
+};
 use chrono::{DateTime, SecondsFormat, Utc};
 use odra::{
     host::{HostEnv, HostRefLoader},
@@ -92,9 +95,9 @@ pub struct Contract {
 }
 
 pub struct DeployedContracts {
-    pub wcspr_token: Cep18HostRef,
-    pub short_token: Cep18HostRef,
-    pub long_token: Cep18HostRef,
+    pub wcspr_token: TokenWCSPRHostRef,
+    pub short_token: TokenShortHostRef,
+    pub long_token: TokenLongHostRef,
     pub market: MarketHostRef,
 }
 
@@ -102,9 +105,9 @@ impl DeployedContracts {
     pub fn load(env: HostEnv) -> Self {
         let contracts = DeployedContractsToml::load().unwrap();
         Self {
-            wcspr_token: Cep18HostRef::load(&env, contracts.address("WCSPR").unwrap()),
-            short_token: Cep18HostRef::load(&env, contracts.address("SHORT").unwrap()),
-            long_token: Cep18HostRef::load(&env, contracts.address("LONG").unwrap()),
+            wcspr_token: TokenWCSPRHostRef::load(&env, contracts.address("WCSPR").unwrap()),
+            short_token: TokenShortHostRef::load(&env, contracts.address("SHORT").unwrap()),
+            long_token: TokenLongHostRef::load(&env, contracts.address("LONG").unwrap()),
             market: MarketHostRef::load(&env, contracts.address("Market").unwrap()),
         }
     }

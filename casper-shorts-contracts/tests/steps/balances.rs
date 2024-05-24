@@ -22,8 +22,8 @@ fn balance_check(
         token_kind,
         amount,
         token_kind,
-        diff
+        Amount(diff)
     );
 
-    assert!(diff < U256::from(10_000_000), "{}", error_msg);
+    assert!(diff < U256::from(10_000), "{}", error_msg);
 }

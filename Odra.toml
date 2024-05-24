@@ -1,7 +1,4 @@
 [[contracts]]
-fqn = "casper_shorts_contracts::Cep18"
-
-[[contracts]]
 fqn = "casper_shorts_contracts::market::Market"
 
 [[contracts]]

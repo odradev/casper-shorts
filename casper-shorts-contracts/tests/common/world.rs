@@ -21,10 +21,10 @@ const INITIAL_WCSPR_BALANCE: u64 = 1_000_000_000_000u64; // 1000 CSPR
 
 #[derive(cucumber::World)]
 pub struct CasperShortsWorld {
-    odra_env: HostEnv,
-    wcspr_token: TokenWCSPRHostRef,
-    short_token: TokenShortHostRef,
-    long_token: TokenLongHostRef,
+    pub odra_env: HostEnv,
+    pub wcspr_token: TokenWCSPRHostRef,
+    pub short_token: TokenShortHostRef,
+    pub long_token: TokenLongHostRef,
     pub market: MarketHostRef,
 }
 
@@ -122,7 +122,10 @@ impl Debug for CasperShortsWorld {
 impl CasperShortsWorld {
     pub fn address(&self, account: Account) -> Address {
         match account {
-            Account::Market => self.market.address().clone(),
+            Account::MarketContract => self.market.address().clone(),
+            Account::LongContract => self.long_token.address().clone(),
+            Account::ShortContract => self.short_token.address().clone(),
+            Account::WCSPRContract => self.wcspr_token.address().clone(),
             _ => self.odra_env.get_account(account.index()),
         }
     }
@@ -182,5 +185,16 @@ impl CasperShortsWorld {
 
     pub fn get_market_state(&self) -> MarketState {
         self.market.get_market_state()
+    }
+
+    pub fn transfer(&mut self, token: TokenKind, sender: Account, amount: U256, receiver: Account) {
+        let sender = self.address(sender);
+        let receiver = self.address(receiver);
+        self.odra_env.set_caller(sender);
+        match token {
+            TokenKind::WCSPR => self.wcspr_token.transfer(&receiver, &amount),
+            TokenKind::SHORT => self.short_token.transfer(&receiver, &amount),
+            TokenKind::LONG => self.long_token.transfer(&receiver, &amount),
+        }
     }
 }

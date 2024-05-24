@@ -33,6 +33,33 @@ impl TokenWCSPR {
         self.address_pack.set(address_pack);
     }
 
+    pub fn transfer(&mut self, recipient: &Address, amount: &U256) {
+        let sender = self.env().caller();
+        let pack = self.address_pack.get();
+        if pack.is_long_token(&recipient) {
+            self.address_pack
+                .market()
+                .deposit_long_from(&sender, *amount);
+        } else if pack.is_short_token(&recipient) {
+            self.address_pack
+                .market()
+                .deposit_short_from(&sender, *amount);
+        } else {
+            // In other cases, transfer the token.
+            self.token.raw_transfer(&sender, &recipient, &amount);
+        }
+    }
+
+    pub fn transfer_from(&mut self, owner: &Address, recipient: &Address, amount: &U256) {
+        let sender = self.env().caller();
+        let pack = self.address_pack.get();
+        if pack.is_market(&sender) {
+            self.token.raw_transfer(owner, recipient, amount);
+        } else {
+            self.token.transfer_from(owner, recipient, amount);
+        }
+    }
+
     // Delegate all Cep18 functions to the token submodule.
     delegate! {
         to self.token {
@@ -77,10 +104,10 @@ impl TokenWCSPR {
             fn increase_allowance(&mut self, spender: &Address, inc_by: &U256);
 
             /// Transfers tokens from the caller to the recipient.
-            fn transfer(&mut self, recipient: &Address, amount: &U256);
+            // fn transfer(&mut self, recipient: &Address, amount: &U256);
 
             /// Transfers tokens from the owner to the recipient using the spender's allowance.
-            fn transfer_from(&mut self, owner: &Address, recipient: &Address, amount: &U256);
+            // fn transfer_from(&mut self, owner: &Address, recipient: &Address, amount: &U256);
 
             /// Mints new tokens and assigns them to the given address.
             fn mint(&mut self, owner: &Address, amount: &U256);

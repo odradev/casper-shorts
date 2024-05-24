@@ -5,3 +5,4 @@ Market:
 
 WCSPR:
 - Add `faucet()` to WCSPR contract, and turn off transfers.
+- Transfer to itself generates new WCSPR tokens.

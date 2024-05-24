@@ -1,4 +1,4 @@
-use odra::{casper_types::U256, prelude::*, Address, SubModule, Var};
+use odra::{casper_types::U256, prelude::*, Address, SubModule};
 use odra_modules::{access::Ownable, cep18::utils::Cep18Modality, cep18_token::Cep18};
 
 use crate::address_pack::{AddressPack, AddressPackModule};
@@ -36,6 +36,28 @@ impl TokenLong {
     pub fn set_address_pack(&mut self, address_pack: AddressPack) {
         self.ownable.assert_owner(&self.env().caller());
         self.address_pack.set(address_pack);
+    }
+
+    pub fn transfer(&mut self, recipient: &Address, amount: &U256) {
+        let sender = self.env().caller();
+        let pack = self.address_pack.get();
+        if pack.is_wcspr_token(&recipient) {
+            self.address_pack
+                .market()
+                .withdraw_long_from(&sender, *amount);
+        } else {
+            self.token.raw_transfer(&sender, &recipient, &amount);
+        }
+    }
+
+    pub fn transfer_from(&mut self, owner: &Address, recipient: &Address, amount: &U256) {
+        let sender = self.env().caller();
+        let pack = self.address_pack.get();
+        if pack.is_market(&sender) {
+            self.token.raw_transfer(owner, recipient, amount);
+        } else {
+            self.token.transfer_from(owner, recipient, amount);
+        }
     }
 
     // Delegate all Cep18 functions to the token submodule.
@@ -82,10 +104,10 @@ impl TokenLong {
             fn increase_allowance(&mut self, spender: &Address, inc_by: &U256);
 
             /// Transfers tokens from the caller to the recipient.
-            fn transfer(&mut self, recipient: &Address, amount: &U256);
+            // fn transfer(&mut self, recipient: &Address, amount: &U256);
 
             /// Transfers tokens from the owner to the recipient using the spender's allowance.
-            fn transfer_from(&mut self, owner: &Address, recipient: &Address, amount: &U256);
+            // fn transfer_from(&mut self, owner: &Address, recipient: &Address, amount: &U256);
 
             /// Mints new tokens and assigns them to the given address.
             fn mint(&mut self, owner: &Address, amount: &U256);

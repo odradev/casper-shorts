@@ -21,10 +21,18 @@ plots:
 
 deploy-contracts:
     cargo run -p casper-shorts-client deploy-contracts
-    cargo run -p casper-shorts-client set-security
+
+set-config:
+    cargo run -p casper-shorts-client set-config
 
 update-price:
     cargo run -p casper-shorts-client update-price
 
 update-price-deamon:
     cargo run -p casper-shorts-client update-price-deamon 1
+
+print-balances:
+    cargo run -p casper-shorts-client print-balances
+
+go-long:
+    cargo run -p casper-shorts-client go-long

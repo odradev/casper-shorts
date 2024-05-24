@@ -1,8 +1,7 @@
 use odra::{
-    casper_types::U256, module::Module, prelude::*, Address, ContractRef, SubModule,
-    UnwrapOrRevert, Var,
+    casper_types::U256, module::Module, prelude::*, Address, SubModule, UnwrapOrRevert, Var,
 };
-use odra_modules::{access::Ownable, cep18_token::Cep18ContractRef};
+use odra_modules::access::Ownable;
 
 use crate::{
     address_pack::{AddressPack, AddressPackModule},
@@ -25,19 +24,51 @@ impl Market {
     }
 
     pub fn deposit_long(&mut self, amount: U256) {
-        self.deposit_unchecked(Side::Long, amount);
+        self.deposit_unchecked(&self.env().caller(), Side::Long, amount);
+    }
+
+    pub fn deposit_long_from(&mut self, sender: &Address, amount: U256) {
+        if self.address_pack.get().is_long_token(&self.env().caller()) {
+            self.env()
+                .revert(MarketError::LongTokenContractNotACallerOnDeposit);
+        }
+        self.deposit_unchecked(sender, Side::Long, amount);
     }
 
     pub fn deposit_short(&mut self, amount: U256) {
-        self.deposit_unchecked(Side::Short, amount);
+        self.deposit_unchecked(&self.env().caller(), Side::Short, amount);
+    }
+
+    pub fn deposit_short_from(&mut self, sender: &Address, amount: U256) {
+        if self.address_pack.get().is_short_token(&self.env().caller()) {
+            self.env()
+                .revert(MarketError::ShortTokenContractNotACallerOnDeposit);
+        }
+        self.deposit_unchecked(sender, Side::Short, amount);
     }
 
     pub fn withdraw_long(&mut self, amount: U256) {
-        self.withdrawal_unchecked(Side::Long, amount);
+        self.withdrawal_unchecked(&self.env().caller(), Side::Long, amount);
+    }
+
+    pub fn withdraw_long_from(&mut self, sender: &Address, amount: U256) {
+        if self.address_pack.get().is_wcspr_token(&self.env().caller()) {
+            self.env()
+                .revert(MarketError::LongTokenContractNotACallerOnWithdrawal);
+        }
+        self.withdrawal_unchecked(sender, Side::Long, amount);
     }
 
     pub fn withdraw_short(&mut self, amount: U256) {
-        self.withdrawal_unchecked(Side::Short, amount);
+        self.withdrawal_unchecked(&self.env().caller(), Side::Short, amount);
+    }
+
+    pub fn withdraw_short_from(&mut self, sender: &Address, amount: U256) {
+        if self.address_pack.get().is_wcspr_token(&self.env().caller()) {
+            self.env()
+                .revert(MarketError::ShortTokenContractNotACallerOnWithdrawal);
+        }
+        self.withdrawal_unchecked(sender, Side::Short, amount);
     }
 
     pub fn set_price(&mut self, price_data: PriceData) {
@@ -66,8 +97,8 @@ impl Market {
         self.state.set(state);
     }
 
-    fn deposit_unchecked(&mut self, side: Side, amount: U256) {
-        self.collect_deposit(&amount);
+    fn deposit_unchecked(&mut self, sender: &Address, side: Side, amount: U256) {
+        self.collect_deposit(&sender, &amount);
         let (amount, fee) = split_fee(amount);
         self.collect_fee(&fee);
 
@@ -80,24 +111,23 @@ impl Market {
             Side::Long => self.address_pack.long_token_cep18(),
             Side::Short => self.address_pack.short_token_cep18(),
         };
-        token.mint(&self.env().caller(), &new_tokens);
+        token.mint(&sender, &new_tokens);
     }
 
-    pub fn withdrawal_unchecked(&mut self, side: Side, amount: U256) {
+    pub fn withdrawal_unchecked(&mut self, reciever: &Address, side: Side, amount: U256) {
         let mut state = self.get_state();
         let withdraw_amount = state.on_withdraw(side, amount);
 
         let (withdraw_amount, fee) = split_fee(withdraw_amount);
         self.collect_fee(&fee);
-        self.withdraw_deposit(&withdraw_amount);
+        self.withdraw_deposit(reciever, &withdraw_amount);
 
         let self_address = self.env().self_address();
-        let caller = self.env().caller();
         let mut token = match side {
             Side::Long => self.address_pack.long_token_cep18(),
             Side::Short => self.address_pack.short_token_cep18(),
         };
-        token.transfer_from(&caller, &self_address, &amount);
+        token.transfer_from(&reciever, &self_address, &amount);
         token.burn(&self_address, &amount);
 
         self.set_state(state);
@@ -122,18 +152,14 @@ impl Market {
             .transfer(&fee_collector, amount);
     }
 
-    fn collect_deposit(&mut self, amount: &U256) {
-        self.address_pack.wcspr_token().transfer_from(
-            &self.env().caller(),
-            &self.env().self_address(),
-            amount,
-        );
-    }
-
-    fn withdraw_deposit(&mut self, amount: &U256) {
+    fn collect_deposit(&mut self, sender: &Address, amount: &U256) {
         self.address_pack
             .wcspr_token()
-            .transfer(&self.env().caller(), amount);
+            .transfer_from(&sender, &self.env().self_address(), amount);
+    }
+
+    fn withdraw_deposit(&mut self, recipient: &Address, amount: &U256) {
+        self.address_pack.wcspr_token().transfer(recipient, amount);
     }
 }
 
@@ -150,4 +176,8 @@ pub enum MarketError {
     NewPriceIsFromTheFuture = 8003,
     LongShareNotSet = 8004,
     TotalDepositNotSet = 8005,
+    LongTokenContractNotACallerOnDeposit = 8006,
+    ShortTokenContractNotACallerOnDeposit = 8007,
+    LongTokenContractNotACallerOnWithdrawal = 8008,
+    ShortTokenContractNotACallerOnWithdrawal = 8009,
 }

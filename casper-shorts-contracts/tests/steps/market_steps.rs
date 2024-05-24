@@ -40,3 +40,14 @@ fn check_price(world: &mut CasperShortsWorld, price: Price) {
     let market_state = world.get_market_state();
     assert_eq!(market_state.price, price.value());
 }
+
+#[when(expr = "{account} transfers {amount} {token_kind} to {account}")]
+fn transfer(
+    world: &mut CasperShortsWorld,
+    sender: Account,
+    amount: Amount,
+    token: TokenKind,
+    receiver: Account,
+) {
+    world.transfer(token, sender, amount.value(), receiver);
+}

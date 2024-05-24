@@ -12,9 +12,9 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Commands {
     /// Deploys all DAO contracts
-    DeployAll,
+    DeployContracts,
     /// Configures whitelists of all contracts
-    SetSecurity,
+    SetConfig,
     /// Update price.
     UpdatePrice {
         #[arg(short, long)]
@@ -22,75 +22,20 @@ enum Commands {
     },
     UpdatePriceDeamon {
         interval_mintues: u64,
-    }
-
-    // /// Sets up a slashing voter
-    // SetupSlashingVoter,
-    // /// Prints addresses of all contracts
-    // PrintAddresses,
-    // /// Sets up a VA account
-    // SetupVA {
-    //     /// Account hash of the address in a form "account-hash-..."
-    //     account_hash: String,
-    //     /// Amount of reputation to be minted
-    //     reputation_amount: u64,
-    // },
-    // /// Prints all variables stored in the variable repository
-    // PrintVariables,
-    // /// Sets a variable value in the variable repository
-    // SetVariable {
-    //     /// Name of the variable
-    //     name: String,
-    //     /// Value of the variable
-    //     value: String,
-    // },
-    // /// Prints balance of an account
-    // BalanceOf {
-    //     /// Account hash of the address in a form "account-hash-..."
-    //     account_hash: String,
-    // },
-    // /// Prints stake of an account
-    // StakeOf {
-    //     /// Account hash of the address in a form "account-hash-..."
-    //     account_hash: String,
-    // },
-    // /// Get voting information
-    // GetVoting {
-    //     /// Voting id
-    //     voting_id: String,
-    //     /// Voting contract name
-    //     /// Possible values: kyc_voter, repo_voter, reputation_voter, admin, slashing_voter, simple_voter, bid_escrow
-    //     contract: String,
-    // },
-    // /// Get account information
-    // GetAccount {
-    //     /// Account hash of the address in a form "account-hash-..."
-    //     account_hash: String,
-    // },
+    },
+    PrintBalances,
+    GoLong,
 }
 
 pub fn parse() {
-    use Commands::*;
     match Cli::parse().command {
-        DeployAll => actions::deploy_all(),
-        SetSecurity => actions::set_security(),
-        UpdatePrice { dry_run } => actions::update_price(dry_run),
-        UpdatePriceDeamon { interval_mintues } => actions::update_price_deamon(interval_mintues),
-        // Whitelist => actions::whitelist(),
-        // SetupSlashingVoter => actions::setup_slashing_voter(),
-        // PrintAddresses => actions::print_addresses(),
-        // SetupVA {
-        //     account_hash,
-        //     reputation_amount,
-        // } => actions::setup_va(&account_hash, reputation_amount),
-        // PrintVariables => actions::print_variables(),
-        // SetVariable { name, value } => actions::set_variable(&name, &value),
-        // BalanceOf { account_hash } => actions::balance_of(&account_hash),
-        // StakeOf { account_hash } => actions::stake_of(&account_hash),
-        // GetVoting {
-        //     voting_id,
-        //     contract,
-        // } => actions::get_voting(&voting_id, &contract),
-        // GetAccount { account_hash } => actions::get_account(&account_hash),
+        Commands::DeployContracts => actions::deploy_all(),
+        Commands::SetConfig => actions::set_config(),
+        Commands::UpdatePrice { dry_run } => actions::update_price(dry_run),
+        Commands::UpdatePriceDeamon { interval_mintues } => {
+            actions::update_price_deamon(interval_mintues)
+        }
+        Commands::PrintBalances => actions::print_balances(),
+        Commands::GoLong => actions::go_long(1_000_000_000.into()),
     }
 }

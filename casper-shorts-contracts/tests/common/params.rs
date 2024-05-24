@@ -11,7 +11,10 @@ pub enum Account {
     Bob = 2,
     Charlie = 3,
     FeeCollector = 4,
-    Market = 100,
+    MarketContract = 100,
+    LongContract = 101,
+    ShortContract = 102,
+    WCSPRContract = 103,
 }
 
 impl FromStr for Account {
@@ -23,7 +26,10 @@ impl FromStr for Account {
             "Bob" => Ok(Account::Bob),
             "Charlie" => Ok(Account::Charlie),
             "FeeCollector" => Ok(Account::FeeCollector),
-            "Market" => Ok(Account::Market),
+            "LongContract" => Ok(Account::LongContract),
+            "ShortContract" => Ok(Account::ShortContract),
+            "WCSPRContract" => Ok(Account::WCSPRContract),
+            "MarketContract" => Ok(Account::MarketContract),
             _ => Err(format!("Invalid account: {}", s)),
         }
     }
