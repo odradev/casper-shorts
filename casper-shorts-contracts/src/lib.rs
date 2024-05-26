@@ -2,7 +2,7 @@
 #![cfg_attr(not(test), no_main)]
 extern crate alloc;
 
-pub mod address_pack;
+pub mod config;
 pub mod market;
 pub mod price_data;
 pub mod system;

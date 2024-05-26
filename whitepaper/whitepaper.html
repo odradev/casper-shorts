@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Scientific Whitepaper</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/texme@1.2.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background: #f9f9f9;
+            /* font-family: 'Roboto', sans-serif; */
+            line-height: 1.6;
+            color: #333;
+        }
+        main {
+            width: 100%;
+            max-width: 40em;
+            background: #fff;
+            padding-left: 5em;
+            padding-right: 5em;
+            padding-top: 5em;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            text-align: justify;
+            text-justify: inter-word;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.6em;
+        }
+
+        h2 {
+            font-size: 1.2em;
+        }
+
+        h3 {
+            font-size: 1em;
+        }
+
+        .authors {
+            text-align: center;
+            font-size: 1em;
+            margin-top: 1em;
+        }
+
+        .abstract {
+            padding-top: 3em;
+            padding-bottom: 3em;
+            padding-left: 5em;
+            padding-right: 5em;
+        }
+
+        /* p {
+            padding: 1;
+        } */
+        /* h1, h2, h3 {
+            color: #2a2a2a;
+        } */
+        /* p, li {
+            font-size: 16px;
+            color: #444;
+        } */
+
+        .language-mermaid {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        svg.mermaid {
+            margin: auto; /* ensures that SVGs are centered */
+            max-width: 100%; /* ensures SVG does not overflow */
+        }
+        /* code {
+            font-family: monospace;
+            background-color: #eee;
+            padding: 2px 5px;
+            border-radius: 3px;
+        } */
+    </style>
+</head>
+<body>
+<main>
+    <div id="output"></div>
+</main>
+
+<script>
+    window.onload = function () {
+        mermaid.initialize({startOnLoad: false});
+
+        fetch("whitepaper.md")
+            .then(response => response.text())
+            .then(text => {
+                var output = document.getElementById('output');
+                var rendered = texme.render(text, { style: 'plain'});
+                output.innerHTML = rendered;
+
+                // Initialize Mermaid for any diagrams in the rendered Markdown
+                mermaid.init(undefined, output.querySelectorAll('.language-mermaid'));
+
+                if (window.MathJax) {
+                    window.MathJax.texReset();
+                    window.MathJax.typesetPromise();
+                }
+            });
+    };
+</script>
+</body>
+</html>

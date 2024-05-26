@@ -4,7 +4,7 @@ use odra_modules::cep18_token::Cep18ContractRef;
 use crate::{market::MarketContractRef, token_long::TokenLongContractRef};
 
 #[odra::odra_type]
-pub struct AddressPack {
+pub struct Config {
     pub long_token: Address,
     pub short_token: Address,
     pub wcspr_token: Address,
@@ -12,7 +12,7 @@ pub struct AddressPack {
     pub market: Address,
 }
 
-impl AddressPack {
+impl Config {
     pub fn is_long_token(&self, addr: &Address) -> bool {
         &self.long_token == addr
     }
@@ -35,20 +35,20 @@ impl AddressPack {
 }
 
 #[odra::module]
-pub struct AddressPackModule {
-    state: Var<AddressPack>,
+pub struct ConfigModule {
+    state: Var<Config>,
 }
 
-impl AddressPackModule {
-    pub fn init(&mut self, state: AddressPack) {
+impl ConfigModule {
+    pub fn init(&mut self, state: Config) {
         self.state.set(state);
     }
 
-    pub fn set(&mut self, state: AddressPack) {
+    pub fn set(&mut self, state: Config) {
         self.state.set(state);
     }
 
-    pub fn get(&self) -> AddressPack {
+    pub fn get(&self) -> Config {
         self.state.get().unwrap_or_revert(&self.env())
     }
 

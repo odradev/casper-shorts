@@ -1,7 +1,7 @@
 use std::thread;
 use std::time::Duration;
 
-use casper_shorts_contracts::address_pack::AddressPack;
+use casper_shorts_contracts::config::Config;
 use casper_shorts_contracts::market::{MarketHostRef, MarketInitArgs};
 use casper_shorts_contracts::price_data::PriceData;
 use casper_shorts_contracts::system::{ONE_CENT, ONE_DOLLAR};
@@ -87,7 +87,7 @@ pub fn set_config() {
         .long_token
         .change_security(vec![], vec![contracts.market.address().clone()], vec![]);
 
-    let address_pack = AddressPack {
+    let cfg = Config {
         wcspr_token: contracts.wcspr_token.address().clone(),
         short_token: contracts.short_token.address().clone(),
         long_token: contracts.long_token.address().clone(),
@@ -95,10 +95,10 @@ pub fn set_config() {
         fee_collector: env.get_account(0),
     };
 
-    contracts.market.set_addres_pack(address_pack.clone());
-    contracts.long_token.set_address_pack(address_pack.clone());
-    contracts.short_token.set_address_pack(address_pack.clone());
-    contracts.wcspr_token.set_address_pack(address_pack.clone());
+    contracts.market.set_config(cfg.clone());
+    contracts.long_token.set_config(cfg.clone());
+    contracts.short_token.set_config(cfg.clone());
+    contracts.wcspr_token.set_config(cfg.clone());
 }
 
 pub fn update_price(dry_run: bool) {

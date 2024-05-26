@@ -4,15 +4,13 @@ use odra::{
 use odra_modules::access::Ownable;
 
 use crate::{
-    address_pack::{AddressPack, AddressPackModule},
-    price_data::PriceData,
-    system::{MarketState, Side},
+    config::{Config, ConfigModule}, price_data::PriceData, system::{MarketState, Side}
 };
 
 #[odra::module]
 pub struct Market {
     admin: SubModule<Ownable>,
-    address_pack: SubModule<AddressPackModule>,
+    cfg: SubModule<ConfigModule>,
     state: Var<MarketState>,
 }
 
@@ -28,7 +26,7 @@ impl Market {
     }
 
     pub fn deposit_long_from(&mut self, sender: &Address, amount: U256) {
-        if self.address_pack.get().is_long_token(&self.env().caller()) {
+        if self.cfg.get().is_long_token(&self.env().caller()) {
             self.env()
                 .revert(MarketError::LongTokenContractNotACallerOnDeposit);
         }
@@ -40,7 +38,7 @@ impl Market {
     }
 
     pub fn deposit_short_from(&mut self, sender: &Address, amount: U256) {
-        if self.address_pack.get().is_short_token(&self.env().caller()) {
+        if self.cfg.get().is_short_token(&self.env().caller()) {
             self.env()
                 .revert(MarketError::ShortTokenContractNotACallerOnDeposit);
         }
@@ -52,7 +50,7 @@ impl Market {
     }
 
     pub fn withdraw_long_from(&mut self, sender: &Address, amount: U256) {
-        if self.address_pack.get().is_wcspr_token(&self.env().caller()) {
+        if self.cfg.get().is_wcspr_token(&self.env().caller()) {
             self.env()
                 .revert(MarketError::LongTokenContractNotACallerOnWithdrawal);
         }
@@ -64,7 +62,7 @@ impl Market {
     }
 
     pub fn withdraw_short_from(&mut self, sender: &Address, amount: U256) {
-        if self.address_pack.get().is_wcspr_token(&self.env().caller()) {
+        if self.cfg.get().is_wcspr_token(&self.env().caller()) {
             self.env()
                 .revert(MarketError::ShortTokenContractNotACallerOnWithdrawal);
         }
@@ -82,9 +80,9 @@ impl Market {
         self.get_state()
     }
 
-    pub fn set_addres_pack(&mut self, address_pack: AddressPack) {
+    pub fn set_config(&mut self, cfg: Config) {
         self.admin.assert_owner(&self.env().caller());
-        self.address_pack.set(address_pack);
+        self.cfg.set(cfg);
     }
 }
 
@@ -107,33 +105,28 @@ impl Market {
         self.set_state(state);
 
         // Mint new tokens to the caller.
-        let mut token = match side {
-            Side::Long => self.address_pack.long_token_cep18(),
-            Side::Short => self.address_pack.short_token_cep18(),
+        match side {
+            Side::Long => self.cfg.long_token().mint(&sender, &new_tokens),
+            Side::Short => self.cfg.short_token().mint(&sender, &new_tokens),
         };
-        token.mint(&sender, &new_tokens);
     }
 
     pub fn withdrawal_unchecked(&mut self, reciever: &Address, side: Side, amount: U256) {
+        // Update the state and get the amount that can be withdrawn.
         let mut state = self.get_state();
         let withdraw_amount = state.on_withdraw(side, amount);
+        self.set_state(state);
 
+        // Withdraw the deposit and fee.
         let (withdraw_amount, fee) = split_fee(withdraw_amount);
         self.collect_fee(&fee);
         self.withdraw_deposit(reciever, &withdraw_amount);
 
-        let self_address = self.env().self_address();
-        let mut token = match side {
-            Side::Long => self.address_pack.long_token_cep18(),
-            Side::Short => self.address_pack.short_token_cep18(),
+        // Burn the tokens.
+        match side {
+            Side::Long => self.cfg.long_token().burn(&reciever, &amount),
+            Side::Short => self.cfg.short_token().burn(&reciever, &amount),
         };
-
-        token.transfer_from(&reciever, &self_address, &amount);
-
-        // TODO: Override burn to make it possible without above transfer.
-        token.burn(&self_address, &amount);
-
-        self.set_state(state);
     }
 
     // Check if the new price is in fact newer and if so, update the last price.
@@ -149,20 +142,20 @@ impl Market {
     // }
 
     fn collect_fee(&mut self, amount: &U256) {
-        let fee_collector = self.address_pack.fee_collector();
-        self.address_pack
+        let fee_collector = self.cfg.fee_collector();
+        self.cfg
             .wcspr_token()
             .transfer(&fee_collector, amount);
     }
 
     fn collect_deposit(&mut self, sender: &Address, amount: &U256) {
-        self.address_pack
+        self.cfg
             .wcspr_token()
             .transfer_from(&sender, &self.env().self_address(), amount);
     }
 
     fn withdraw_deposit(&mut self, recipient: &Address, amount: &U256) {
-        self.address_pack.wcspr_token().transfer(recipient, amount);
+        self.cfg.wcspr_token().transfer(recipient, amount);
     }
 }
 

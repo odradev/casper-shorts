@@ -93,7 +93,6 @@ impl MarketState {
     // $L_{Long}(i+1) = L_{Long}(i) - \Delta L_{Long}$
     pub fn on_price_goes_down(&mut self, new_price: U256) {
         let delta = self.long_liquidity * self.price / new_price - self.long_liquidity;
-        let delta = self.long_liquidity.min(delta);
 
         self.long_liquidity -= delta;
         self.short_liquidity += delta;

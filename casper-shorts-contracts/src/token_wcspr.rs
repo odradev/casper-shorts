@@ -1,14 +1,14 @@
 use odra::{casper_types::U256, prelude::*, Address, SubModule};
 use odra_modules::{access::Ownable, cep18::utils::Cep18Modality, cep18_token::Cep18};
 
-use crate::address_pack::{AddressPack, AddressPackModule};
+use crate::config::{Config, ConfigModule};
 
 /// A module definition. Each module struct consists of Vars and Mappings
 /// or/and other modules.
 #[odra::module]
 pub struct TokenWCSPR {
     token: SubModule<Cep18>,
-    address_pack: SubModule<AddressPackModule>,
+    cfg: SubModule<ConfigModule>,
     ownable: SubModule<Ownable>,
 }
 
@@ -28,20 +28,20 @@ impl TokenWCSPR {
         self.ownable.init();
     }
 
-    pub fn set_address_pack(&mut self, address_pack: AddressPack) {
+    pub fn set_config(&mut self, cfg: Config) {
         self.ownable.assert_owner(&self.env().caller());
-        self.address_pack.set(address_pack);
+        self.cfg.set(cfg);
     }
 
     pub fn transfer(&mut self, recipient: &Address, amount: &U256) {
         let sender = self.env().caller();
-        let pack = self.address_pack.get();
+        let pack = self.cfg.get();
         if pack.is_long_token(&recipient) {
-            self.address_pack
+            self.cfg
                 .market()
                 .deposit_long_from(&sender, *amount);
         } else if pack.is_short_token(&recipient) {
-            self.address_pack
+            self.cfg
                 .market()
                 .deposit_short_from(&sender, *amount);
         } else {
@@ -52,7 +52,7 @@ impl TokenWCSPR {
 
     pub fn transfer_from(&mut self, owner: &Address, recipient: &Address, amount: &U256) {
         let sender = self.env().caller();
-        let pack = self.address_pack.get();
+        let pack = self.cfg.get();
         if pack.is_market(&sender) {
             self.token.raw_transfer(owner, recipient, amount);
         } else {
