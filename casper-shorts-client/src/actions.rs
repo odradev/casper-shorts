@@ -27,8 +27,8 @@ pub fn deploy_all() {
     let wcspr_token = TokenWCSPRHostRef::deploy(
         &env,
         TokenWCSPRInitArgs {
-            name: "002_CS_WCSPR".to_string(),
-            symbol: "002_CS_WCSPR".to_string(),
+            name: "004_CS_CSPR".to_string(),
+            symbol: "004_CS_CSPR".to_string(),
             decimals: 9,
             initial_supply: 1_000_000_000_000_000u64.into(),
         },
@@ -39,8 +39,8 @@ pub fn deploy_all() {
     let short_token = TokenShortHostRef::deploy(
         &env,
         TokenShortInitArgs {
-            name: "002_CS_SHORT".to_string(),
-            symbol: "002_CS_SHORT".to_string(),
+            name: "004_SHORT".to_string(),
+            symbol: "004_SHORT".to_string(),
             decimals: 9,
             initial_supply: 0u64.into(),
         },
@@ -51,8 +51,8 @@ pub fn deploy_all() {
     let long_token = TokenLongHostRef::deploy(
         &env,
         TokenLongInitArgs {
-            name: "002_CS_LONG".to_string(),
-            symbol: "002_CS_LONG".to_string(),
+            name: "004_LONG".to_string(),
+            symbol: "004_LONG".to_string(),
             decimals: 9,
             initial_supply: 0u64.into(),
         },
