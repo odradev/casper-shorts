@@ -102,7 +102,17 @@ $$ T(i+1) = T(i) - W $$
 $$ \Delta L(i+1) = L(i) \times (1 - \frac{T(i)}{T(i+1)}) $$
 $$ L(i+1) = L(i) - \Delta L $$
 
-## 
+## 6. System Implementation
+
+### 6.1 Price Rebalance Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Market
+    User->>Market: update_price(price)
+    Market->>Market: rebalance(price)
+```
 
 ## Appendix 1 - Examples
 

@@ -83,6 +83,30 @@
             padding: 2px 5px;
             border-radius: 3px;
         } */
+
+        /* Comic style customizations */
+        .node rect, .node circle, .node ellipse {
+            stroke: black;
+            stroke-width: 2px;
+            fill: white;
+        }
+        
+        .node text {
+            font-family: "Comic Sans MS", "Comic Sans", cursive;
+            font-size: 14px;
+        }
+
+        .edgePath path {
+            stroke: black;
+            stroke-width: 2px;
+            fill: none;
+        }
+
+        .edgeLabel text {
+            font-family: "Comic Sans MS", "Comic Sans", cursive;
+            font-size: 12px;
+            fill: black;
+        }
     </style>
 </head>
 <body>
@@ -92,7 +116,10 @@
 
 <script>
     window.onload = function () {
-        mermaid.initialize({startOnLoad: false});
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'base',
+        });
 
         fetch("whitepaper.md")
             .then(response => response.text())
