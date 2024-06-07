@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Formatter};
 
 use casper_shorts_contracts::{
-    config::{self, Config},
+    config::Config,
     market::{MarketHostRef, MarketInitArgs},
     price_data::PriceData,
     system::{MarketState, ONE_CENT},
@@ -82,10 +82,10 @@ impl Default for CasperShortsWorld {
             fee_collector: odra_env.get_account(Account::FeeCollector.index()),
         };
 
-        market.set_config(cfg.clone());
-        long_token.set_config(cfg.clone());
-        short_token.set_config(cfg.clone());
-        wcspr_token.set_config(cfg.clone());
+        market.set_config(&cfg);
+        long_token.set_config(&cfg);
+        short_token.set_config(&cfg);
+        wcspr_token.set_config(&cfg);
 
         // Make market minter of LONG and SHORT tokens.
         short_token.change_security(vec![], vec![market.address().clone()], vec![]);

@@ -1,10 +1,6 @@
-use odra::casper_types::U256;
-
-use crate::{
-    bots::{runnner::RunnerContext, strategy::Strategy},
-    models::TradingAction,
-};
+use casper_shorts_bot::{run_bot, RunnerContext, Strategy, TradingAction, U256};
 use rand::Rng;
+
 pub struct RandomTrader;
 
 impl RandomTrader {
@@ -14,30 +10,31 @@ impl RandomTrader {
 }
 
 impl Strategy for RandomTrader {
-    fn run_step(&self, ctx: RunnerContext) -> Option<TradingAction> {
+    fn run_step(&self, ctx: &RunnerContext) -> Option<TradingAction> {
         let mut options = vec![];
+        let stats = ctx.stats();
 
         // If has wcspr balance, go long or short.
-        if !ctx.stats.wcspr_balance.is_zero() {
+        if !stats.wcspr_balance.is_zero() {
             options.push(TradingAction::GoLong {
-                amount: random(ctx.stats.wcspr_balance),
+                amount: random(stats.wcspr_balance),
             });
             options.push(TradingAction::GoShort {
-                amount: random(ctx.stats.wcspr_balance),
+                amount: random(stats.wcspr_balance),
             });
         }
 
         // If has long balance, stop long.
-        if !ctx.stats.long_balance.is_zero() {
+        if !stats.long_balance.is_zero() {
             options.push(TradingAction::StopLong {
-                amount: random(ctx.stats.long_balance),
+                amount: random(stats.long_balance),
             });
         }
 
         // If has short balance, stop short.
-        if !ctx.stats.short_balance.is_zero() {
+        if !stats.short_balance.is_zero() {
             options.push(TradingAction::StopShort {
-                amount: random(ctx.stats.short_balance),
+                amount: random(stats.short_balance),
             });
         }
 
@@ -55,4 +52,10 @@ fn random(max: U256) -> U256 {
     let mut rng = rand::thread_rng();
     let number = rng.gen_range(0..max.as_u128());
     U256::from(number)
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let interval_seconds = args.get(1).and_then(|s| s.parse().ok());
+    run_bot(Box::new(RandomTrader::new()), interval_seconds)
 }

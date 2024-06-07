@@ -1,0 +1,11 @@
+[package]
+name = "casper-shorts-bot"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+casper-shorts-contracts = { path = "../casper-shorts-contracts" }
+chrono = { version = "0.4", features = ["serde"] }
+odra = { version = "1.0.0", features = [], default-features = false }
+odra-casper-livenet-env = { version = "1.0.0" }
+casper-shorts-client = { path = "../casper-shorts-client" }

@@ -1,5 +1,9 @@
 use odra::{casper_types::U256, prelude::*, Address, SubModule};
-use odra_modules::{access::Ownable, cep18::{errors::Error as Cep18Error, utils::Cep18Modality}, cep18_token::Cep18};
+use odra_modules::{
+    access::Ownable,
+    cep18::{errors::Error as Cep18Error, utils::Cep18Modality},
+    cep18_token::Cep18,
+};
 
 use crate::config::{Config, ConfigModule};
 
@@ -33,7 +37,7 @@ impl TokenShort {
         self.ownable.init();
     }
 
-    pub fn set_config(&mut self, cfg: Config) {
+    pub fn set_config(&mut self, cfg: &Config) {
         self.ownable.assert_owner(&self.env().caller());
         self.cfg.set(cfg);
     }
@@ -42,9 +46,7 @@ impl TokenShort {
         let sender = self.env().caller();
         let pack = self.cfg.get();
         if pack.is_wcspr_token(&recipient) {
-            self.cfg
-                .market()
-                .withdraw_short_from(&sender, *amount);
+            self.cfg.market().withdraw_short_from(&sender, *amount);
         } else {
             self.token.raw_transfer(&sender, &recipient, &amount);
         }

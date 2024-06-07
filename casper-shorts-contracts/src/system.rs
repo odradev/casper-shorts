@@ -168,6 +168,7 @@ impl MarketState {
         delta_liquidity
     }
 }
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Side {
     Long,

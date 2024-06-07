@@ -4,7 +4,7 @@ use std::time::Duration;
 use casper_shorts_contracts::config::Config;
 use casper_shorts_contracts::market::{MarketHostRef, MarketInitArgs};
 use casper_shorts_contracts::price_data::PriceData;
-use casper_shorts_contracts::system::{ONE_CENT, ONE_DOLLAR};
+use casper_shorts_contracts::system::ONE_CENT;
 use casper_shorts_contracts::token_long::{TokenLongHostRef, TokenLongInitArgs};
 use casper_shorts_contracts::token_short::{TokenShortHostRef, TokenShortInitArgs};
 use casper_shorts_contracts::token_wcspr::{TokenWCSPRHostRef, TokenWCSPRInitArgs};
@@ -12,11 +12,12 @@ use odra::casper_types::U256;
 use odra::host::HostRef;
 use odra::host::{Deployer, HostEnv};
 
-use crate::bots::runnner::Runner;
-use crate::bots::traders::random_trader::RandomTrader;
 use crate::deployed_contracts::{DeployedContracts, DeployedContractsToml};
-use crate::models::{BotMode, Recipient, SystemStats, Token, TransferOrder};
+use crate::models::{Recipient, SystemStats, Token, TransferOrder};
 use crate::{coinmarketcap, log};
+
+// Fits the oracle precision.
+const PRICE_MULTIPLIER: f64 = 1e9;
 
 pub fn deploy_all() {
     DeployedContractsToml::handle_previous_version();
@@ -74,36 +75,36 @@ pub fn deploy_all() {
 
 pub fn set_config() {
     let env = odra_casper_livenet_env::env();
-    let mut contracts = DeployedContracts::load(env.clone());
+    let mut contracts = DeployedContracts::load(&env);
 
     // Make market minter of LONG and SHORT tokens.
     env.set_gas(10_000_000_000);
     contracts
         .short_token
-        .change_security(vec![], vec![contracts.market.address().clone()], vec![]);
+        .change_security(vec![], vec![*contracts.market.address()], vec![]);
 
     env.set_gas(10_000_000_000);
     contracts
         .long_token
-        .change_security(vec![], vec![contracts.market.address().clone()], vec![]);
+        .change_security(vec![], vec![*contracts.market.address()], vec![]);
 
     let cfg = Config {
-        wcspr_token: contracts.wcspr_token.address().clone(),
-        short_token: contracts.short_token.address().clone(),
-        long_token: contracts.long_token.address().clone(),
-        market: contracts.market.address().clone(),
+        wcspr_token: *contracts.wcspr_token.address(),
+        short_token: *contracts.short_token.address(),
+        long_token: *contracts.long_token.address(),
+        market: *contracts.market.address(),
         fee_collector: env.get_account(0),
     };
 
-    contracts.market.set_config(cfg.clone());
-    contracts.long_token.set_config(cfg.clone());
-    contracts.short_token.set_config(cfg.clone());
-    contracts.wcspr_token.set_config(cfg.clone());
+    contracts.market.set_config(&cfg);
+    contracts.long_token.set_config(&cfg);
+    contracts.short_token.set_config(&cfg);
+    contracts.wcspr_token.set_config(&cfg);
 }
 
 pub fn update_price(dry_run: bool) {
     let env = odra_casper_livenet_env::env();
-    let mut contracts = DeployedContracts::load(env.clone());
+    let mut contracts = DeployedContracts::load(&env);
 
     // Print time.
     log::info(format!("Time: {}", chrono::Utc::now()));
@@ -118,9 +119,8 @@ pub fn update_price(dry_run: bool) {
         return;
     }
 
-    let new_price = new_price * ONE_DOLLAR as f64;
-    let new_price = new_price.round() as u64;
-    let new_price = U256::from(new_price);
+    let integer_value: u64 = (new_price * PRICE_MULTIPLIER).round() as u64;
+    let new_price = U256::from(integer_value);
 
     if new_price == current_price {
         log::info("Price is the same, no need to update.");
@@ -151,7 +151,7 @@ pub fn update_price_deamon(interval: Option<Duration>) {
 
 pub fn print_balances() {
     let env = odra_casper_livenet_env::env();
-    let contracts = DeployedContracts::load(env.clone());
+    let contracts = DeployedContracts::load(&env);
 
     log::info("Balances:");
     log::info(format!(
@@ -170,7 +170,7 @@ pub fn print_balances() {
 
 pub fn go_long(amount: U256) {
     let env = odra_casper_livenet_env::env();
-    let mut contracts = DeployedContracts::load(env.clone());
+    let mut contracts = DeployedContracts::load(&env);
     env.set_gas(10_000_000_000);
     contracts
         .wcspr_token
@@ -180,7 +180,7 @@ pub fn go_long(amount: U256) {
 
 pub fn make_transfer(order: TransferOrder) {
     let env = odra_casper_livenet_env::env();
-    let mut contracts = DeployedContracts::load(env.clone());
+    let mut contracts = DeployedContracts::load(&env);
     let recipient = match order.recipient {
         Recipient::WcsprContract => contracts.wcspr_token.address().clone(),
         Recipient::ShortContract => contracts.short_token.address().clone(),
@@ -189,7 +189,7 @@ pub fn make_transfer(order: TransferOrder) {
     };
     let amount = order.amount;
     log::info(format!(
-        "Transfering {} {:?} to {:?}",
+        "Transferring {} {:?} to {:?}",
         amount, order.token, recipient
     ));
     env.set_gas(10_000_000_000);
@@ -197,23 +197,6 @@ pub fn make_transfer(order: TransferOrder) {
         Token::Long => contracts.long_token.transfer(&recipient, &amount),
         Token::Short => contracts.short_token.transfer(&recipient, &amount),
         Token::Wcspr => contracts.wcspr_token.transfer(&recipient, &amount),
-    }
-}
-
-pub fn run_bot(mode: BotMode, interval: Option<Duration>) {
-    let mut runner = {
-        match mode {
-            BotMode::Random => {
-                let trader = RandomTrader::new();
-                Runner::new(trader)
-            }
-        }
-    };
-
-    if let Some(interval) = interval {
-        runner.run_forever(interval);
-    } else {
-        runner.run_once();
     }
 }
 
@@ -236,7 +219,7 @@ pub fn get_stats(env: &HostEnv, contracts: &DeployedContracts) -> SystemStats {
 
 pub fn print_stats() {
     let env = odra_casper_livenet_env::env();
-    let contracts = DeployedContracts::load(env.clone());
+    let contracts = DeployedContracts::load(&env);
     let stats = get_stats(&env, &contracts);
 
     log::info("Account Info:");

@@ -4,7 +4,10 @@ use odra::{
 use odra_modules::access::Ownable;
 
 use crate::{
-    config::{Config, ConfigModule}, price_data::PriceData, system::{MarketState, Side}
+    config::{Config, ConfigModule},
+    events::{OnDeposit, OnPriceChange},
+    price_data::PriceData,
+    system::{MarketState, Side},
 };
 
 #[odra::module]
@@ -74,13 +77,17 @@ impl Market {
         let mut state = self.get_state();
         state.on_price_change(price_data.price);
         self.set_state(state);
+        self.env().emit_event(OnPriceChange {
+            price: price_data.price,
+            timestamp: price_data.timestamp,
+        });
     }
 
     pub fn get_market_state(&self) -> MarketState {
         self.get_state()
     }
 
-    pub fn set_config(&mut self, cfg: Config) {
+    pub fn set_config(&mut self, cfg: &Config) {
         self.admin.assert_owner(&self.env().caller());
         self.cfg.set(cfg);
     }
@@ -96,7 +103,7 @@ impl Market {
     }
 
     fn deposit_unchecked(&mut self, sender: &Address, side: Side, amount: U256) {
-        self.collect_deposit(&sender, &amount);
+        self.collect_deposit(sender, &amount);
         let (amount, fee) = split_fee(amount);
         self.collect_fee(&fee);
 
@@ -106,12 +113,19 @@ impl Market {
 
         // Mint new tokens to the caller.
         match side {
-            Side::Long => self.cfg.long_token().mint(&sender, &new_tokens),
-            Side::Short => self.cfg.short_token().mint(&sender, &new_tokens),
+            Side::Long => self.cfg.long_token().mint(sender, &new_tokens),
+            Side::Short => self.cfg.short_token().mint(sender, &new_tokens),
         };
+
+        // Emit the deposit event.
+        self.env().emit_event(OnDeposit {
+            depositor: *sender,
+            amount,
+            is_long: side == Side::Long,
+        });
     }
 
-    pub fn withdrawal_unchecked(&mut self, reciever: &Address, side: Side, amount: U256) {
+    pub fn withdrawal_unchecked(&mut self, receiver: &Address, side: Side, amount: U256) {
         // Update the state and get the amount that can be withdrawn.
         let mut state = self.get_state();
         let withdraw_amount = state.on_withdraw(side, amount);
@@ -120,13 +134,20 @@ impl Market {
         // Withdraw the deposit and fee.
         let (withdraw_amount, fee) = split_fee(withdraw_amount);
         self.collect_fee(&fee);
-        self.withdraw_deposit(reciever, &withdraw_amount);
+        self.withdraw_deposit(receiver, &withdraw_amount);
 
         // Burn the tokens.
         match side {
-            Side::Long => self.cfg.long_token().burn(&reciever, &amount),
-            Side::Short => self.cfg.short_token().burn(&reciever, &amount),
+            Side::Long => self.cfg.long_token().burn(receiver, &amount),
+            Side::Short => self.cfg.short_token().burn(receiver, &amount),
         };
+
+        // Emit the withdrawal event.
+        self.env().emit_event(OnDeposit {
+            depositor: *receiver,
+            amount,
+            is_long: side == Side::Long,
+        });
     }
 
     // Check if the new price is in fact newer and if so, update the last price.
@@ -143,9 +164,7 @@ impl Market {
 
     fn collect_fee(&mut self, amount: &U256) {
         let fee_collector = self.cfg.fee_collector();
-        self.cfg
-            .wcspr_token()
-            .transfer(&fee_collector, amount);
+        self.cfg.wcspr_token().transfer(&fee_collector, amount);
     }
 
     fn collect_deposit(&mut self, sender: &Address, amount: &U256) {

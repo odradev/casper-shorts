@@ -1,11 +1,10 @@
 pub mod actions;
-pub mod bots;
 pub mod cli;
 pub mod coinmarketcap;
 pub mod deployed_contracts;
 pub mod models;
 
-mod log {
+pub mod log {
     /// Info message.
     pub fn info<T: AsRef<str>>(message: T) {
         prettycli::info(message.as_ref());

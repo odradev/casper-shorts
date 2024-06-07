@@ -1,5 +1,7 @@
 [workspace]
-members = [
+members = [ 
+    "casper-shorts-bot", 
+    "casper-shorts-bot-random",
     "casper-shorts-charts",
     "casper-shorts-client",
     "casper-shorts-contracts",

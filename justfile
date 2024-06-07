@@ -38,4 +38,4 @@ go-long:
     cargo run -p casper-shorts-client go-long
 
 random-bot SEC:
-    cargo run -p casper-shorts-client run-bot random -i {{SEC}}
+    cargo run -p casper-shorts-bot-random {{SEC}}

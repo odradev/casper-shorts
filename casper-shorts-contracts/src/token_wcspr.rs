@@ -28,7 +28,7 @@ impl TokenWCSPR {
         self.ownable.init();
     }
 
-    pub fn set_config(&mut self, cfg: Config) {
+    pub fn set_config(&mut self, cfg: &Config) {
         self.ownable.assert_owner(&self.env().caller());
         self.cfg.set(cfg);
     }
@@ -37,13 +37,9 @@ impl TokenWCSPR {
         let sender = self.env().caller();
         let pack = self.cfg.get();
         if pack.is_long_token(&recipient) {
-            self.cfg
-                .market()
-                .deposit_long_from(&sender, *amount);
+            self.cfg.market().deposit_long_from(&sender, *amount);
         } else if pack.is_short_token(&recipient) {
-            self.cfg
-                .market()
-                .deposit_short_from(&sender, *amount);
+            self.cfg.market().deposit_short_from(&sender, *amount);
         } else {
             // In other cases, transfer the token.
             self.token.raw_transfer(&sender, &recipient, &amount);

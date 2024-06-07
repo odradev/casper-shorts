@@ -1,24 +1,30 @@
 use std::{thread, time::Duration};
 
+use casper_shorts_client::{
+    actions, deployed_contracts::DeployedContracts, log, models::SystemStats,
+};
+use casper_shorts_contracts::market::MarketHostRef;
 use odra::host::HostEnv;
-
-use crate::{actions, deployed_contracts::DeployedContracts, log, models::SystemStats};
 
 use super::strategy::Strategy;
 
-pub struct Runner<T: Strategy> {
-    strategy: T,
+pub struct Runner {
+    strategy: Box<dyn Strategy>,
+    ctx: RunnerContext,
 }
 
-impl<T: Strategy> Runner<T> {
-    pub fn new(strategy: T) -> Self {
-        Self { strategy }
+impl Runner {
+    pub fn new(strategy: Box<dyn Strategy>) -> Self {
+        Self {
+            strategy,
+            ctx: RunnerContext::new(),
+        }
     }
 
     pub fn run_once(&mut self) {
+        self.ctx.refresh();
         log::info(format!("Time: {}", chrono::Utc::now()));
-        let context = RunnerContext::new();
-        let action = self.strategy.run_step(context);
+        let action = self.strategy.run_step(&self.ctx);
 
         if action.is_none() {
             log::info("No action.");
@@ -41,20 +47,32 @@ impl<T: Strategy> Runner<T> {
 }
 
 pub struct RunnerContext {
-    pub stats: SystemStats,
-    pub contracts: DeployedContracts,
-    pub env: HostEnv,
+    env: HostEnv,
+    stats: SystemStats,
+    contracts: DeployedContracts,
 }
 
 impl RunnerContext {
     pub fn new() -> Self {
         let env = odra_casper_livenet_env::env();
-        let contracts = DeployedContracts::load(env.clone());
+        let contracts = DeployedContracts::load(&env);
         let stats = actions::get_stats(&env, &contracts);
         Self {
+            env,
             stats,
             contracts,
-            env,
         }
+    }
+
+    pub fn refresh(&mut self) {
+        self.stats = actions::get_stats(&self.env, &self.contracts);
+    }
+
+    pub fn stats(&self) -> &SystemStats {
+        &self.stats
+    }
+
+    pub fn market_ref(&self) -> &MarketHostRef {
+        &self.contracts.market
     }
 }

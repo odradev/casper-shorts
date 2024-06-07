@@ -44,8 +44,8 @@ impl ConfigModule {
         self.state.set(state);
     }
 
-    pub fn set(&mut self, state: Config) {
-        self.state.set(state);
+    pub fn set(&mut self, state: &Config) {
+        self.state.set(state.clone());
     }
 
     pub fn get(&self) -> Config {

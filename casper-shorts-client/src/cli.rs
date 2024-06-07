@@ -1,4 +1,4 @@
-use crate::{actions, models::BotMode};
+use crate::actions;
 use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -30,8 +30,8 @@ enum Commands {
         amount: f64,
         recipient: String,
     },
-    #[clap(name = "run-bot", about = "Run bot in a specific mode")]
-    RunBot(RunBot),
+    // #[clap(name = "run-bot", about = "Run bot in a specific mode")]
+    // RunBot(RunBot),
 }
 
 #[derive(Debug, Parser)]
@@ -61,11 +61,6 @@ pub fn parse() {
         Commands::TransferWCSPR { .. } => {
             panic!("Not implemented")
         }
-        Commands::RunBot(run_bot) => match run_bot.run_bots_commands {
-            RunBotCommands::Random { interval_seconds } => {
-                actions::run_bot(BotMode::Random, duration(interval_seconds))
-            }
-        },
         Commands::PrintStats => actions::print_stats(),
     }
 }

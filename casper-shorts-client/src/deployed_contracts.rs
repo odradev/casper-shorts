@@ -102,13 +102,13 @@ pub struct DeployedContracts {
 }
 
 impl DeployedContracts {
-    pub fn load(env: HostEnv) -> Self {
+    pub fn load(env: &HostEnv) -> Self {
         let contracts = DeployedContractsToml::load().unwrap();
         Self {
-            wcspr_token: TokenWCSPRHostRef::load(&env, contracts.address("WCSPR").unwrap()),
-            short_token: TokenShortHostRef::load(&env, contracts.address("SHORT").unwrap()),
-            long_token: TokenLongHostRef::load(&env, contracts.address("LONG").unwrap()),
-            market: MarketHostRef::load(&env, contracts.address("Market").unwrap()),
+            wcspr_token: TokenWCSPRHostRef::load(env, contracts.address("WCSPR").unwrap()),
+            short_token: TokenShortHostRef::load(env, contracts.address("SHORT").unwrap()),
+            long_token: TokenLongHostRef::load(env, contracts.address("LONG").unwrap()),
+            market: MarketHostRef::load(env, contracts.address("Market").unwrap()),
         }
     }
 }
