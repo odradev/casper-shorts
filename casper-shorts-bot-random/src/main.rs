@@ -1,16 +1,10 @@
-use casper_shorts_bot::{run_bot, RunnerContext, Strategy, TradingAction, U256};
+use casper_shorts_bot::{run_bot, RunnerContext, RunnerMode, Strategy, TradingAction, U256};
 use rand::Rng;
 
 pub struct RandomTrader;
 
-impl RandomTrader {
-    pub fn new() -> Self {
-        Self
-    }
-}
-
 impl Strategy for RandomTrader {
-    fn run_step(&self, ctx: &RunnerContext) -> Option<TradingAction> {
+    fn run_step(&self, ctx: &dyn RunnerContext) -> Option<TradingAction> {
         let mut options = vec![];
         let stats = ctx.stats();
 
@@ -54,8 +48,10 @@ fn random(max: U256) -> U256 {
     U256::from(number)
 }
 
+fn interval_arg() -> Option<u64> {
+    casper_shorts_bot::arg(1)
+}
+
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    let interval_seconds = args.get(1).and_then(|s| s.parse().ok());
-    run_bot(Box::new(RandomTrader::new()), interval_seconds)
+    run_bot(Box::new(RandomTrader), interval_arg(), RunnerMode::Live)
 }

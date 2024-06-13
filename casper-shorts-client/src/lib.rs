@@ -1,8 +1,8 @@
 pub mod actions;
 pub mod cli;
-pub mod coinmarketcap;
 pub mod deployed_contracts;
 pub mod models;
+pub mod price;
 
 pub mod log {
     /// Info message.

@@ -1,78 +1,33 @@
-use std::{thread, time::Duration};
-
-use casper_shorts_client::{
-    actions, deployed_contracts::DeployedContracts, log, models::SystemStats,
-};
-use casper_shorts_contracts::market::MarketHostRef;
-use odra::host::HostEnv;
-
 use super::strategy::Strategy;
+use casper_shorts_client::{actions, deployed_contracts::DeployedContracts, log, models::SystemStats};
+use odra::casper_types::U256;
 
-pub struct Runner {
-    strategy: Box<dyn Strategy>,
-    ctx: RunnerContext,
+pub(crate) mod backtesting;
+pub(crate) mod live;
+
+pub trait RunnerContext {
+    fn stats(&self) -> &SystemStats;
+    fn refresh_market_state(&mut self);
+    fn refresh_prices(&mut self);
+    fn prices(&self) -> &[U256];
+    fn deployed_contracts(&mut self) -> &mut DeployedContracts;
 }
 
-impl Runner {
-    pub fn new(strategy: Box<dyn Strategy>) -> Self {
-        Self {
-            strategy,
-            ctx: RunnerContext::new(),
-        }
-    }
-
-    pub fn run_once(&mut self) {
-        self.ctx.refresh();
-        log::info(format!("Time: {}", chrono::Utc::now()));
-        let action = self.strategy.run_step(&self.ctx);
-
-        if action.is_none() {
-            log::info("No action.");
-            return;
-        }
-
-        let action = action.unwrap();
-        log::info(format!("Action: {:?}", action));
-        let transfer = action.to_transfer_order();
-        actions::make_transfer(transfer);
-    }
-
-    pub fn run_forever(&mut self, interval: Duration) {
-        loop {
-            self.run_once();
-            log::info(format!("Sleeping for {:?}", interval));
-            thread::sleep(interval);
-        }
-    }
+pub enum RunnerMode {
+    Live,
+    Backtesting,
 }
 
-pub struct RunnerContext {
-    env: HostEnv,
-    stats: SystemStats,
-    contracts: DeployedContracts,
-}
-
-impl RunnerContext {
-    pub fn new() -> Self {
-        let env = odra_casper_livenet_env::env();
-        let contracts = DeployedContracts::load(&env);
-        let stats = actions::get_stats(&env, &contracts);
-        Self {
-            env,
-            stats,
-            contracts,
+fn step<T: RunnerContext>(strategy: &Box<dyn Strategy>, ctx: &mut T) {
+    ctx.refresh_market_state();
+    ctx.refresh_prices();
+    log::info(format!("Time: {}", chrono::Utc::now()));
+    match strategy.run_step(ctx) {
+        Some(action) => {
+            log::info(format!("Action: {:?}", action));
+            let transfer = action.to_transfer_order();
+            actions::make_transfer(transfer, ctx.deployed_contracts());
         }
-    }
-
-    pub fn refresh(&mut self) {
-        self.stats = actions::get_stats(&self.env, &self.contracts);
-    }
-
-    pub fn stats(&self) -> &SystemStats {
-        &self.stats
-    }
-
-    pub fn market_ref(&self) -> &MarketHostRef {
-        &self.contracts.market
+        None => log::info("No action."),
     }
 }

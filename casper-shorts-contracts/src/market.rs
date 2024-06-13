@@ -196,3 +196,41 @@ pub enum MarketError {
     LongTokenContractNotACallerOnWithdrawal = 8008,
     ShortTokenContractNotACallerOnWithdrawal = 8009,
 }
+
+#[cfg(test)]
+mod t {
+    use odra::{casper_types::U256, host::Deployer};
+
+    use crate::price_data::PriceData;
+
+    use super::{MarketHostRef, MarketInitArgs};
+
+    #[test]
+    fn a() {
+        let env = odra_test::env();
+        let mut c = MarketHostRef::deploy(
+            &env,
+            MarketInitArgs {
+                last_price: PriceData {
+                    price: 1.into(),
+                    timestamp: 0u64,
+                },
+            },
+        );
+
+        c.set_price(PriceData {
+            price: U256::from(123),
+            timestamp: 0,
+        });
+        c.set_price(PriceData {
+            price: U256::from(124),
+            timestamp: 0,
+        });
+        c.set_price(PriceData {
+            price: U256::from(126),
+            timestamp: 0,
+        });
+
+        assert_eq!(env.events_count(&c), 4);
+    }
+}

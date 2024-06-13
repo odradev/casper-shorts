@@ -4,16 +4,20 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-odra = { version = "1.0.0", features = [], default-features = false }
-odra-modules = { version = "1.0.0", features = [], default-features = false }
+# odra = { version = "1.0.0", features = [], default-features = false }
+# odra-modules = { version = "1.0.0", features = [], default-features = false }
+odra = { path = "../../odra/odra", features = [], default-features = false }
+odra-modules = { path = "../../odra/modules", features = [], default-features = false }
 
 [dev-dependencies]
-odra-test = { version = "1.0.0", features = [], default-features = false }
+# odra-test = { version = "1.0.0", features = [], default-features = false }
+odra-test = { path = "../../odra/odra-test", features = [], default-features = false }
 cucumber = "0.19.1"
 futures = "0.3"
 
 [build-dependencies]
-odra-build = { version = "1.0.0", features = [], default-features = false }
+# odra-build = { version = "1.0.0", features = [], default-features = false }
+odra-build = { path = "../../odra/odra-build", features = [], default-features = false }
 
 [[bin]]
 name = "casper_shorts_contracts_build_contract"

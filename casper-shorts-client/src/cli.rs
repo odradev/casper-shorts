@@ -1,4 +1,4 @@
-use crate::actions;
+use crate::{actions, price::CoinmarketcapProvider};
 use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -20,7 +20,7 @@ enum Commands {
         #[arg(short, long)]
         dry_run: bool,
     },
-    UpdatePriceDeamon {
+    UpdatePriceDaemon {
         interval_seconds: Option<u64>,
     },
     PrintBalances,
@@ -49,19 +49,22 @@ pub enum RunBotCommands {
 }
 
 pub fn parse() {
+    let env = odra_casper_livenet_env::env();
     match Cli::parse().command {
-        Commands::DeployContracts => actions::deploy_all(),
-        Commands::SetConfig => actions::set_config(),
-        Commands::UpdatePrice { dry_run } => actions::update_price(dry_run),
-        Commands::UpdatePriceDeamon { interval_seconds } => {
-            actions::update_price_deamon(duration(interval_seconds))
+        Commands::DeployContracts => actions::deploy_all(&env),
+        Commands::SetConfig => actions::set_config(&env),
+        Commands::UpdatePrice { dry_run } => {
+            actions::update_price::<CoinmarketcapProvider>(&env, dry_run)
         }
-        Commands::PrintBalances => actions::print_balances(),
-        Commands::GoLong => actions::go_long(1_000_000_000.into()),
+        Commands::UpdatePriceDaemon { interval_seconds } => {
+            actions::update_price_daemon::<CoinmarketcapProvider>(&env, duration(interval_seconds))
+        }
+        Commands::PrintBalances => actions::print_balances(&env),
+        Commands::GoLong => actions::go_long(&env, 1_000_000_000.into()),
         Commands::TransferWCSPR { .. } => {
             panic!("Not implemented")
         }
-        Commands::PrintStats => actions::print_stats(),
+        Commands::PrintStats => actions::print_stats(&env),
     }
 }
 

@@ -28,8 +28,8 @@ set-config:
 update-price:
     cargo run -p casper-shorts-client update-price
 
-update-price-deamon SEC:
-    cargo run -p casper-shorts-client update-price-deamon {{SEC}} 
+update-price-daemon SEC:
+    cargo run -p casper-shorts-client update-price-daemon {{SEC}} 
 
 print-balances:
     cargo run -p casper-shorts-client print-balances

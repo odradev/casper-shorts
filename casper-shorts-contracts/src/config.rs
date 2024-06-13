@@ -13,6 +13,22 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn new(
+        long_token: Address,
+        short_token: Address,
+        wcspr_token: Address,
+        fee_collector: Address,
+        market: Address,
+    ) -> Self {
+        Self {
+            long_token,
+            short_token,
+            wcspr_token,
+            fee_collector,
+            market,
+        }
+    }
+
     pub fn is_long_token(&self, addr: &Address) -> bool {
         &self.long_token == addr
     }

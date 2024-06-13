@@ -1,0 +1,7 @@
+[package]
+name = "casper-short-bot-ma"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+casper-shorts-bot = { path = "../casper-shorts-bot" }
