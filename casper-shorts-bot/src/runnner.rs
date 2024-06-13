@@ -1,5 +1,7 @@
 use super::strategy::Strategy;
-use casper_shorts_client::{actions, deployed_contracts::DeployedContracts, log, models::SystemStats};
+use casper_shorts_client::{
+    actions, deployed_contracts::DeployedContracts, log, models::SystemStats,
+};
 use odra::casper_types::U256;
 
 pub(crate) mod backtesting;

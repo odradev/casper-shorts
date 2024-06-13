@@ -44,16 +44,11 @@ impl LiveRunnerContext {
         let env = odra_casper_livenet_env::env();
         let contracts = DeployedContracts::load(&env);
         let stats = actions::get_stats(&contracts);
-        // let (prices, processed_events_count) = contracts.get_prices(0);
-        // let prices: Vec<_> = prices.iter().map(|p| p.price).collect();
-
-        // dbg!(prices.len());
-        // dbg!(processed_events_count);
 
         Self {
             stats,
             contracts,
-            prices : vec![],
+            prices: vec![],
             processed_events_count: 0,
         }
     }
@@ -71,7 +66,7 @@ impl RunnerContext for LiveRunnerContext {
     fn prices(&self) -> &[U256] {
         &self.prices
     }
-    
+
     fn refresh_prices(&mut self) {
         let start = self.processed_events_count;
         let (prices, count) = self.contracts.get_prices(start);
@@ -81,7 +76,7 @@ impl RunnerContext for LiveRunnerContext {
         dbg!(self.prices.len());
         dbg!(self.processed_events_count);
     }
-    
+
     fn deployed_contracts(&mut self) -> &mut DeployedContracts {
         &mut self.contracts
     }

@@ -11,3 +11,4 @@ odra = { path = "../../odra/odra", features = [], default-features = false }
 # odra-casper-livenet-env = { version = "1.0.0" }
 odra-casper-livenet-env = { path = "../../odra/odra-casper/livenet-env" }
 casper-shorts-client = { path = "../casper-shorts-client" }
+odra-test = { path = "../../odra/odra-test" }

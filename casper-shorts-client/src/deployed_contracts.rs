@@ -108,6 +108,22 @@ pub struct DeployedContracts {
 }
 
 impl DeployedContracts {
+    pub fn new(
+        env: &HostEnv,
+        wcspr_token: TokenWCSPRHostRef,
+        short_token: TokenShortHostRef,
+        long_token: TokenLongHostRef,
+        market: MarketHostRef,
+    ) -> Self {
+        Self {
+            env: env.clone(),
+            wcspr_token,
+            short_token,
+            long_token,
+            market,
+        }
+    }
+
     pub fn load(env: &HostEnv) -> Self {
         let contracts = DeployedContractsToml::load().unwrap();
         Self {
@@ -128,19 +144,18 @@ impl DeployedContracts {
         }
     }
 
-    pub fn set_gas(&mut self, gas: u64) {
-        self.env.set_gas(gas);
-    }
-
     pub fn transfer_long(&mut self, recipient: &Address, amount: &U256) {
+        self.env.set_gas(10_000_000_000);
         self.long_token.transfer(recipient, amount);
     }
 
     pub fn transfer_short(&mut self, recipient: &Address, amount: &U256) {
+        self.env.set_gas(10_000_000_000);
         self.short_token.transfer(recipient, amount);
     }
 
     pub fn transfer_wcspr(&mut self, recipient: &Address, amount: &U256) {
+        self.env.set_gas(10_000_000_000);
         self.wcspr_token.transfer(recipient, amount);
     }
 
@@ -177,11 +192,13 @@ impl DeployedContracts {
     }
 
     pub fn set_short_minter(&mut self, minter: Address) {
+        self.env.set_gas(10_000_000_000);
         self.short_token
             .change_security(vec![], vec![minter], vec![]);
     }
 
     pub fn set_long_minter(&mut self, minter: Address) {
+        self.env.set_gas(10_000_000_000);
         self.long_token
             .change_security(vec![], vec![minter], vec![]);
     }
@@ -193,7 +210,12 @@ impl DeployedContracts {
         self.wcspr_token.set_config(cfg);
     }
 
-    pub fn set_price(&mut self, price_data: PriceData) {
+    pub fn set_price(&mut self, price: U256) {
+        let price_data = PriceData {
+            price,
+            timestamp: self.env.block_time(),
+        };
+        self.env.set_gas(400_000_000);
         self.market.set_price(price_data);
     }
 

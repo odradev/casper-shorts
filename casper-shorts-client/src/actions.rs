@@ -67,14 +67,9 @@ pub fn deploy_all(env: &HostEnv) {
     );
 }
 
-pub fn set_config(env: &HostEnv) {
-    let mut contracts = DeployedContracts::load(env);
-
+pub fn set_config(contracts: &mut DeployedContracts) {
     // Make market minter of LONG and SHORT tokens.
-    contracts.set_gas(10_000_000_000);
     contracts.set_short_minter(contracts.market_address());
-
-    contracts.set_gas(10_000_000_000);
     contracts.set_long_minter(contracts.market_address());
 
     let cfg = Config {
@@ -82,14 +77,12 @@ pub fn set_config(env: &HostEnv) {
         short_token: contracts.short_address(),
         long_token: contracts.long_address(),
         market: contracts.market_address(),
-        fee_collector: env.get_account(0),
+        fee_collector: contracts.get_account(0),
     };
     contracts.set_config(&cfg);
 }
 
-pub fn update_price<T: PriceProvider>(env: &HostEnv, dry_run: bool) {
-    let mut contracts = DeployedContracts::load(env);
-
+pub fn update_price<T: PriceProvider>(contracts: &mut DeployedContracts, dry_run: bool) {
     // Print time.
     log::info(format!("Time: {}", chrono::Utc::now()));
 
@@ -110,19 +103,18 @@ pub fn update_price<T: PriceProvider>(env: &HostEnv, dry_run: bool) {
         log::info("Price is the same, no need to update.");
         return;
     }
-    contracts.set_gas(400_000_000);
-    contracts.set_price(PriceData {
-        price: new_price,
-        timestamp: env.block_time(),
-    });
+    contracts.set_price(new_price);
 
     let current_price = contracts.get_market_state().price;
     log::info(format!("New contract price: 0.0{} CSPR/USD", current_price));
 }
 
-pub fn update_price_daemon<T: PriceProvider>(env: &HostEnv, interval: Option<Duration>) {
+pub fn update_price_daemon<T: PriceProvider>(
+    contracts: &mut DeployedContracts,
+    interval: Option<Duration>,
+) {
     loop {
-        update_price::<T>(env, false);
+        update_price::<T>(contracts, false);
         if let Some(interval) = interval {
             log::info(format!("Sleeping for {:?}", interval));
             thread::sleep(interval);
@@ -132,8 +124,7 @@ pub fn update_price_daemon<T: PriceProvider>(env: &HostEnv, interval: Option<Dur
     }
 }
 
-pub fn print_balances(env: &HostEnv) {
-    let contracts = DeployedContracts::load(env);
+pub fn print_balances(contracts: &mut DeployedContracts) {
     let account = contracts.get_account(0);
 
     log::info("Balances:");
@@ -142,9 +133,7 @@ pub fn print_balances(env: &HostEnv) {
     log::info(format!("LONG: {}", contracts.long_balance(&account)));
 }
 
-pub fn go_long(env: &HostEnv, amount: U256) {
-    let mut contracts = DeployedContracts::load(env);
-    contracts.set_gas(10_000_000_000);
+pub fn go_long(contracts: &mut DeployedContracts, amount: U256) {
     contracts.transfer_wcspr(&contracts.long_address(), &amount);
     // contracts.market.deposit_long(amount);
 }
@@ -161,7 +150,6 @@ pub fn make_transfer(order: TransferOrder, contracts: &mut DeployedContracts) {
         "Transferring {} {:?} to {:?}",
         amount, order.token, recipient
     ));
-    contracts.set_gas(10_000_000_000);
     match order.token {
         Token::Long => contracts.transfer_long(&recipient, &amount),
         Token::Short => contracts.transfer_short(&recipient, &amount),
@@ -194,8 +182,7 @@ pub fn get_stats(contracts: &DeployedContracts) -> SystemStats {
     }
 }
 
-pub fn print_stats(env: &HostEnv) {
-    let contracts = DeployedContracts::load(&env);
+pub fn print_stats(contracts: &DeployedContracts) {
     let stats = get_stats(&contracts);
 
     log::info("Account Info:");
@@ -232,4 +219,53 @@ fn deploy_contract<T: InitArgs, R: HostRef + HasIdent + EntryPointsCallerProvide
     env.set_gas(DEFAULT_WASM_DEPLOY_COST);
     let contract = R::deploy(env, init_args);
     contracts.add_contract(&contract);
+}
+
+pub fn deploy_market_contract(env: &HostEnv, init_args: Option<MarketInitArgs>) -> MarketHostRef {
+    let init_args = init_args.unwrap_or_else(|| MarketInitArgs {
+        last_price: PriceData {
+            price: ONE_CENT.into(),
+            timestamp: 0u64.into(),
+        },
+    });
+    MarketHostRef::deploy(env, init_args)
+}
+
+pub fn deploy_wcspr_contract(
+    env: &HostEnv,
+    init_args: Option<TokenWCSPRInitArgs>,
+) -> TokenWCSPRHostRef {
+    let init_args = init_args.unwrap_or_else(|| TokenWCSPRInitArgs {
+        name: "004_CS_CSPR".to_string(),
+        symbol: "004_CS_CSPR".to_string(),
+        decimals: 9,
+        initial_supply: 1_000_000_000_000_000u64.into(),
+    });
+    TokenWCSPRHostRef::deploy(env, init_args)
+}
+
+pub fn deploy_long_token_contract(
+    env: &HostEnv,
+    init_args: Option<TokenLongInitArgs>,
+) -> TokenLongHostRef {
+    let init_args = init_args.unwrap_or_else(|| TokenLongInitArgs {
+        name: "004_LONG".to_string(),
+        symbol: "004_LONG".to_string(),
+        decimals: 9,
+        initial_supply: 0u64.into(),
+    });
+    TokenLongHostRef::deploy(env, init_args)
+}
+
+pub fn deploy_short_token_contract(
+    env: &HostEnv,
+    init_args: Option<TokenShortInitArgs>,
+) -> TokenShortHostRef {
+    let init_args = init_args.unwrap_or_else(|| TokenShortInitArgs {
+        name: "004_SHORT".to_string(),
+        symbol: "004_SHORT".to_string(),
+        decimals: 9,
+        initial_supply: 0u64.into(),
+    });
+    TokenShortHostRef::deploy(env, init_args)
 }

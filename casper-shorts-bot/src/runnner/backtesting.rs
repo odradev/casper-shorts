@@ -1,4 +1,6 @@
-use casper_shorts_client::{actions, deployed_contracts::DeployedContracts, models::SystemStats, price::FilePriceProvider};
+use casper_shorts_client::{
+    actions, deployed_contracts::DeployedContracts, models::SystemStats, price::FilePriceProvider,
+};
 use odra::casper_types::U256;
 
 use crate::{RunnerContext, Strategy};
@@ -9,14 +11,24 @@ pub struct BacktestingRunnerContext {
     ctx: LiveRunnerContext,
     prices: Vec<U256>,
     current_index: usize,
+    contracts: DeployedContracts,
 }
 
 impl BacktestingRunnerContext {
     pub fn new() -> Self {
+        let env = odra_test::env();
+        let contracts = DeployedContracts::new(
+            &env,
+            actions::deploy_wcspr_contract(&env, None),
+            actions::deploy_short_token_contract(&env, None),
+            actions::deploy_long_token_contract(&env, None),
+            actions::deploy_market_contract(&env, None),
+        );
         Self {
             ctx: LiveRunnerContext::new(),
             prices: actions::get_historical_cspr_prices::<FilePriceProvider>(),
             current_index: 0,
+            contracts,
         }
     }
 
@@ -42,13 +54,13 @@ impl RunnerContext for BacktestingRunnerContext {
     fn prices(&self) -> &[U256] {
         &self.prices
     }
-    
+
     fn refresh_prices(&mut self) {
         // do nothing
     }
 
     fn deployed_contracts(&mut self) -> &mut DeployedContracts {
-        self.ctx.deployed_contracts()
+        &mut self.contracts
     }
 }
 
@@ -65,7 +77,6 @@ impl BacktestingRunner {
 
     pub fn run(&mut self) {
         while self.ctx.next() {
-
             step(&self.strategy, &mut self.ctx);
         }
     }
