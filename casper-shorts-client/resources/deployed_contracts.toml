@@ -1,17 +1,17 @@
-time = "2024-05-26T17:16:35Z"
-
-[[contracts]]
-name = "WCSPR"
-package_hash = "hash-612c68005aedf03206dcea83cc3a9a08bbf2df5b40d8f3fca685459c72fc2d77"
-
-[[contracts]]
-name = "SHORT"
-package_hash = "hash-30aaedbd585ca446875548cc7da2fb3989254b67d5aa54209f2f0ae9a151c5c8"
-
-[[contracts]]
-name = "LONG"
-package_hash = "hash-ffd679d485b27955b0fa31d7541f2ef783793810515354d3c02a256fefb014d6"
+time = "2024-06-10T22:01:18Z"
 
 [[contracts]]
 name = "Market"
-package_hash = "hash-ac26118927d6ce6727bbef8c823a3ac6a4a8f4d5743d4e6eec568de835c431eb"
+package_hash = "hash-93fd1e3fd31a38cda79cf36dfd79e0c2a3887e8386b45b9800bb483299a54421"
+
+[[contracts]]
+name = "TokenWCSPR"
+package_hash = "hash-6fa68482f815998f310f8d82d1edcd6585115c434e484ba9bf9ab28b43b23bdd"
+
+[[contracts]]
+name = "TokenShort"
+package_hash = "hash-a276e56b29aecfbf6d456617d29fa5e0782c175a62ec0051d289f0a21c99f200"
+
+[[contracts]]
+name = "TokenLong"
+package_hash = "hash-d5928755af5a9e4aadcb5606c6e68bd116b10d62fee98d07c24c9e47f77683a2"

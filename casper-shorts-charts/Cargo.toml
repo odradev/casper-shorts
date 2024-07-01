@@ -6,8 +6,8 @@ edition = "2021"
 [dependencies]
 plotly = { version = "0.8.4", features = ["kaleido"] }
 casper-shorts-contracts = { path = "../casper-shorts-contracts" }
-# odra = { version = "1.0.0", features = [], default-features = false }
-odra = { path = "../../odra/odra", features = [], default-features = false }
+odra = { git = "https://github.com/odradev/odra", branch = "feature/test-bdd", features = [], default-features = false }
+
 [[bin]]
 name = "casper-shorts-charts"
 path = "src/main.rs"

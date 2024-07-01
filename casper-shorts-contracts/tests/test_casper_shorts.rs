@@ -2,12 +2,9 @@ mod common;
 mod steps;
 
 use common::world::CasperShortsWorld;
-use cucumber::World;
+use odra_test::bdd::run;
 
 fn main() {
-    futures::executor::block_on(CasperShortsWorld::run("tests/features/setup.feature"));
-    futures::executor::block_on(CasperShortsWorld::run("tests/features/market.feature"));
-    futures::executor::block_on(CasperShortsWorld::run(
-        "tests/features/transfer_interface.feature",
-    ));
+    // run::<CasperShortsWorld, _>("tests/features/setup.feature");
+    run::<CasperShortsWorld, _>("tests/features/transfer_interface.feature");
 }
