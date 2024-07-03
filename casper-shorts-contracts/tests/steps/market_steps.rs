@@ -24,11 +24,7 @@ fn withdraw_long(
     amount: Amount,
     token: TokenKind,
 ) {
-    match token {
-        TokenKind::LONG => world.withdraw_long(account, amount),
-        TokenKind::SHORT => world.withdraw_short(account, amount),
-        TokenKind::WCSPR => panic!("Cannot withdraw using WCSPR"),
-    }
+    world.withdraw(token, account, amount);
 }
 
 #[when(expr = "price changes to {price} USD")]
@@ -39,7 +35,7 @@ fn set_price(world: &mut CasperShortsWorld, price: Price) {
 #[then(expr = "price is {price} USD")]
 fn check_price(world: &mut CasperShortsWorld, price: Price) {
     let market_state = world.get_market_state();
-    assert_eq!(market_state.price, *price);
+    assert_eq!(market_state.price, price);
 }
 
 #[when(expr = "{account} transfers {amount} {token_kind} to {account}")]

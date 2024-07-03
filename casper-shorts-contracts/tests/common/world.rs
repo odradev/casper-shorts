@@ -1,4 +1,7 @@
-use std::fmt::{Debug, Formatter};
+use std::{
+    fmt::{Debug, Formatter},
+    str::FromStr,
+};
 
 use casper_shorts_contracts::{
     config::Config,
@@ -11,48 +14,66 @@ use casper_shorts_contracts::{
 };
 use odra::{
     casper_types::U256,
+    contract_def::HasIdent,
     host::{Deployer, HostRef},
     Address,
 };
 use odra_test::bdd::{
     param::{Account, Amount},
+    refs::Cep18TokenHostRef,
     OdraWorld,
 };
 
 use super::params::{Price, TokenKind};
 
 const INITIAL_WCSPR_BALANCE: u64 = 1_000_000_000_000u64; // 1000 CSPR
+const FEE_COLLECTOR: &str = "FeeCollector";
+const MARKET_CONTRACT: &str = "MarketContract";
+const SHORT_CONTRACT: &str = "TokenShortContract";
+const LONG_CONTRACT: &str = "TokenLongContract";
+const WCSPR_CONTRACT: &str = "TokenWCSPRContract";
+
+const STATE_MINT_CALL_COUNT: &str = "mint_call_count";
 
 #[derive(cucumber::World)]
 pub struct CasperShortsWorld {
-    pub odra_world: OdraWorld,
+    odra_world: OdraWorld,
 }
 
 impl CasperShortsWorld {
-    pub fn long_token(&mut self) -> &mut TokenLongHostRef {
-        self.odra_world.get_contract()
-    }
-
-    pub fn short_token(&mut self) -> &mut TokenShortHostRef {
-        self.odra_world.get_contract()
-    }
-
-    pub fn wcspr_token(&mut self) -> &mut TokenWCSPRHostRef {
-        self.odra_world.get_contract()
-    }
-
     pub fn market(&mut self) -> &mut MarketHostRef {
-        self.odra_world.get_contract()
+        self.odra_world.get_contract::<MarketHostRef>()
     }
 
-    pub fn token(&mut self, kind: TokenKind) -> TokenHostRef {
-        let address = match kind {
-            TokenKind::WCSPR => *self.wcspr_token().address(),
-            TokenKind::SHORT => *self.short_token().address(),
-            TokenKind::LONG => *self.long_token().address(),
-        };
-        let env = self.odra_world.env();
-        TokenHostRef::new(address, env.clone())
+    pub fn set_config<I: HasIdent>(&mut self, cfg: &Config) {
+        let addr = self.odra_world.get_contract_address::<I>();
+        ConfigurableHostRef::new(addr, self.odra_world.env().clone()).set_config(cfg);
+    }
+
+    fn address(&mut self, account: &str) -> Address {
+        self.odra_world
+            .get_address(Account::from_str(account).unwrap())
+    }
+
+    fn market_account() -> Account {
+        Account::from_str(MARKET_CONTRACT).unwrap()
+    }
+
+    pub fn cep18(&mut self, kind: TokenKind) -> Cep18TokenHostRef {
+        match kind {
+            TokenKind::WCSPR => self.odra_world.cep18::<TokenWCSPRHostRef>(),
+            TokenKind::SHORT => self.odra_world.cep18::<TokenShortHostRef>(),
+            TokenKind::LONG => self.odra_world.cep18::<TokenLongHostRef>(),
+        }
+    }
+
+    pub fn set_call_count(&mut self, count: u64) {
+        self.odra_world
+            .set_state(STATE_MINT_CALL_COUNT.to_string(), count);
+    }
+
+    pub fn get_call_count(&mut self) -> &u64 {
+        self.odra_world.get_state::<u64>(STATE_MINT_CALL_COUNT)
     }
 }
 
@@ -120,37 +141,27 @@ impl Default for CasperShortsWorld {
             ))
         });
 
-        let market_address = *odra_world.get_contract::<MarketHostRef>().address();
-
+        let mut world = CasperShortsWorld { odra_world };
+        world.set_call_count(0);
         // Update addresses.
         let cfg = Config {
-            wcspr_token: *odra_world.get_contract::<TokenWCSPRHostRef>().address(),
-            short_token: *odra_world.get_contract::<TokenShortHostRef>().address(),
-            long_token: *odra_world.get_contract::<TokenLongHostRef>().address(),
-            market: market_address,
-            fee_collector: odra_world.get_address(Account::CustomRole("FeeCollector".to_string())),
+            wcspr_token: world.address(WCSPR_CONTRACT),
+            short_token: world.address(SHORT_CONTRACT),
+            long_token: world.address(LONG_CONTRACT),
+            market: world.address(MARKET_CONTRACT),
+            fee_collector: world.address(FEE_COLLECTOR),
         };
 
-        odra_world.get_contract::<MarketHostRef>().set_config(&cfg);
-        odra_world
-            .get_contract::<TokenShortHostRef>()
-            .set_config(&cfg);
-        odra_world
-            .get_contract::<TokenLongHostRef>()
-            .set_config(&cfg);
-        odra_world
-            .get_contract::<TokenWCSPRHostRef>()
-            .set_config(&cfg);
+        world.set_config::<MarketHostRef>(&cfg);
+        world.set_config::<TokenShortHostRef>(&cfg);
+        world.set_config::<TokenLongHostRef>(&cfg);
+        world.set_config::<TokenWCSPRHostRef>(&cfg);
 
+        let market_account = Account::from_str(MARKET_CONTRACT).unwrap();
         // Make market minter of LONG and SHORT tokens.
-        odra_world
-            .get_contract::<TokenShortHostRef>()
-            .change_security(vec![], vec![market_address], vec![]);
-        odra_world
-            .get_contract::<TokenLongHostRef>()
-            .change_security(vec![], vec![market_address], vec![]);
+        world.change_security(TokenKind::SHORT, market_account.clone());
+        world.change_security(TokenKind::LONG, market_account.clone());
 
-        let mut world = CasperShortsWorld { odra_world };
         world.mint(
             TokenKind::WCSPR,
             Account::Alice,
@@ -161,7 +172,6 @@ impl Default for CasperShortsWorld {
             Account::Bob,
             Amount::from(INITIAL_WCSPR_BALANCE),
         );
-
         world
     }
 }
@@ -174,46 +184,53 @@ impl Debug for CasperShortsWorld {
 
 impl CasperShortsWorld {
     pub fn balance_of(&mut self, token: TokenKind, account: Account) -> U256 {
-        let address = self.odra_world.get_address(account);
-        self.token(token).balance_of(&address)
+        self.cep18(token).balance_of(&account)
     }
 
     pub fn mint(&mut self, token: TokenKind, account: Account, amount: Amount) {
-        let owner = self.odra_world.get_address(account);
-        self.token(token).mint(&owner, &amount)
+        let s = *self.get_call_count();
+        self.set_call_count(s + 1);
+        self.cep18(token).mint(&account, &amount);
+    }
+
+    pub fn change_security(&mut self, token: TokenKind, account: Account) {
+        self.cep18(token)
+            .change_security(vec![], vec![account], vec![]);
     }
 
     pub fn go_long(&mut self, account: Account, amount: Amount) {
-        self.odra_world.set_caller(account);
-        let market_address = *self.market().address();
-        self.wcspr_token().approve(&market_address, &amount);
+        let spender = Self::market_account();
+        self.odra_world
+            .with_caller(account)
+            .cep18::<TokenWCSPRHostRef>()
+            .approve(&spender, &amount);
         self.market().deposit_long(*amount);
     }
 
     pub fn go_short(&mut self, account: Account, amount: Amount) {
-        self.odra_world.set_caller(account);
-        let market_address = *self.market().address();
-        self.wcspr_token().approve(&market_address, &amount);
+        let spender = Self::market_account();
+        self.odra_world
+            .with_caller(account)
+            .cep18::<TokenWCSPRHostRef>()
+            .approve(&spender, &amount);
         self.market().deposit_short(*amount);
     }
 
-    pub fn withdraw_long(&mut self, account: Account, amount: Amount) {
-        self.odra_world.set_caller(account);
-        let market_address = *self.market().address();
-        self.long_token().approve(&market_address, &amount);
-        self.market().withdraw_long(*amount);
-    }
-
-    pub fn withdraw_short(&mut self, account: Account, amount: Amount) {
-        self.odra_world.set_caller(account);
-        let market_address = *self.market().address();
-        self.short_token().approve(&market_address, &amount);
-        self.market().withdraw_short(*amount);
+    pub fn withdraw(&mut self, kind: TokenKind, account: Account, amount: Amount) {
+        let spender = Self::market_account();
+        self.odra_world
+            .with_caller(account)
+            .cep18::<TokenLongHostRef>()
+            .approve(&spender, &amount);
+        match kind {
+            TokenKind::LONG => self.market().withdraw_long(*amount),
+            TokenKind::SHORT => self.market().withdraw_short(*amount),
+            TokenKind::WCSPR => panic!("Cannot withdraw using WCSPR"),
+        }
     }
 
     pub fn set_price(&mut self, price: Price) {
-        let market = self.market();
-        market.set_price(PriceData {
+        self.market().set_price(PriceData {
             price: *price,
             timestamp: 0,
         });
@@ -230,16 +247,12 @@ impl CasperShortsWorld {
         amount: Amount,
         receiver: Account,
     ) {
-        let receiver = self.odra_world.get_address(receiver);
-        let amount = *amount;
         self.odra_world.set_caller(sender);
-        self.token(kind).transfer(&receiver, &amount);
+        self.cep18(kind).transfer(&receiver, &amount);
     }
 }
 
 #[odra::external_contract]
-pub trait Token {
-    fn balance_of(&self, address: &Address) -> U256;
-    fn transfer(&mut self, recipient: &Address, amount: &U256);
-    fn mint(&mut self, owner: &Address, amount: &U256);
+trait Configurable {
+    fn set_config(&mut self, cfg: &Config);
 }

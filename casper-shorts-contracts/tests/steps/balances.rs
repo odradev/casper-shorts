@@ -1,6 +1,5 @@
-use crate::common::{params::TokenKind, world::CasperShortsWorld};
+use crate::common::{params::TokenKind, utils::BalanceCheck, world::CasperShortsWorld};
 use cucumber::then;
-use odra::casper_types::U256;
 use odra_test::bdd::param::{Account, Amount};
 
 #[then(expr = "{account} has {amount} {token_kind}")]
@@ -23,5 +22,5 @@ fn balance_check(
         Amount::from(diff),
     );
 
-    assert!(diff < U256::from(10_000), "{}", error_msg);
+    assert!(balance.is_close_to(&amount), "{}", error_msg);
 }

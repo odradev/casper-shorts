@@ -59,3 +59,15 @@ impl Deref for Price {
         &self.0
     }
 }
+
+impl PartialEq<U256> for Price {
+    fn eq(&self, other: &U256) -> bool {
+        self.0 == *other
+    }
+}
+
+impl PartialEq<Price> for U256 {
+    fn eq(&self, other: &Price) -> bool {
+        *self == other.0
+    }
+}
